@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Employee;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class UpdateEmployeeRequest extends FormRequest
 {
@@ -11,7 +14,7 @@ class UpdateEmployeeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('update', $this->route('employee'));
     }
 
     /**
@@ -21,8 +24,61 @@ class UpdateEmployeeRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var Employee $employee */
+        $employee = $this->route('employee');
+
         return [
-            //
+            'first_name' => ['required', 'string', 'min:2', 'max:255'],
+            'last_name' => ['required', 'string', 'min:2', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                Rule::unique(Employee::class)->ignore($employee->id),
+            ],
+        ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'first_name' => Str::of((string) $this->input('first_name'))
+                ->squish()
+                ->toString(),
+            'last_name' => Str::of((string) $this->input('last_name'))
+                ->squish()
+                ->toString(),
+            'email' => Str::of((string) $this->input('email'))
+                ->trim()
+                ->lower()
+                ->toString(),
+        ]);
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'first_name.required' => 'The first name is required.',
+            'first_name.min' => 'The first name must be at least 2 characters.',
+            'first_name.max' => 'The first name may not be greater than 255 characters.',
+            'last_name.required' => 'The last name is required.',
+            'last_name.min' => 'The last name must be at least 2 characters.',
+            'last_name.max' => 'The last name may not be greater than 255 characters.',
+            'email.required' => 'The email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.max' => 'The email address may not be greater than 255 characters.',
+            'email.lowercase' => 'The email address must be lowercase.',
+            'email.unique' => 'This email address is already in use.',
         ];
     }
 }
