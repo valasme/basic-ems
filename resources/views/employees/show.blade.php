@@ -1,7 +1,13 @@
 <x-layouts::app :title="__(':name - BasicEMS', ['name' => $employee->full_name])">
     <div class="flex h-full w-full flex-1 flex-col gap-6">
         <div class="flex items-center gap-4">
-            <flux:button href="{{ route('employees.index') }}" variant="ghost" icon="arrow-left" wire:navigate />
+            <flux:button
+                href="{{ route('employees.index') }}"
+                variant="ghost"
+                icon="arrow-left"
+                aria-label="{{ __('Back to employees') }}"
+                wire:navigate
+            />
             <flux:heading size="xl">{{ $employee->full_name }}</flux:heading>
         </div>
 
@@ -43,6 +49,26 @@
                         <flux:heading size="sm" class="mt-1">{{ $employee->email }}</flux:heading>
                     </div>
                     <div>
+                        <flux:subheading>{{ __('Phone Number') }}</flux:subheading>
+                        <flux:heading size="sm" class="mt-1">{{ $employee->phone_number ?? '-' }}</flux:heading>
+                    </div>
+                    <div>
+                        <flux:subheading>{{ __('Department') }}</flux:subheading>
+                        <flux:heading size="sm" class="mt-1">{{ $employee->department ?? '-' }}</flux:heading>
+                    </div>
+                    <div>
+                        <flux:subheading>{{ __('Job Title') }}</flux:subheading>
+                        <flux:heading size="sm" class="mt-1">{{ $employee->job_title ?? '-' }}</flux:heading>
+                    </div>
+                    <div>
+                        <flux:subheading>{{ __('Work In') }}</flux:subheading>
+                        <flux:heading size="sm" class="mt-1">{{ $employee->work_in ?? '-' }}</flux:heading>
+                    </div>
+                    <div>
+                        <flux:subheading>{{ __('Work Out') }}</flux:subheading>
+                        <flux:heading size="sm" class="mt-1">{{ $employee->work_out ?? '-' }}</flux:heading>
+                    </div>
+                    <div>
                         <flux:subheading>{{ __('Created') }}</flux:subheading>
                         <flux:heading size="sm" class="mt-1">{{ $employee->created_at->format('M d, Y \a\t g:i A') }}</flux:heading>
                     </div>
@@ -50,11 +76,16 @@
             </div>
         </flux:card>
 
-        <flux:modal name="delete-employee" class="md:w-96">
+        <flux:modal
+            name="delete-employee"
+            aria-labelledby="delete-employee-title"
+            aria-describedby="delete-employee-desc"
+            class="md:w-96"
+        >
             <div class="space-y-6">
                 <div>
-                    <flux:heading size="lg">{{ __('Delete Employee') }}</flux:heading>
-                    <flux:subheading class="mt-2">
+                    <flux:heading id="delete-employee-title" size="lg">{{ __('Delete Employee') }}</flux:heading>
+                    <flux:subheading id="delete-employee-desc" class="mt-2">
                         {{ __('Are you sure you want to delete :name? This action cannot be undone.', ['name' => $employee->full_name]) }}
                     </flux:subheading>
                 </div>

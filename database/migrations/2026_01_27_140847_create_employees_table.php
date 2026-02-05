@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
+            $table->string('phone_number', 50)->nullable();
+            $table->string('work_in', 5)->nullable();
+            $table->string('work_out', 5)->nullable();
+            $table->string('job_title')->nullable();
+            $table->string('department')->nullable();
             $table->timestamps();
 
             $table->index(['user_id', 'last_name', 'first_name']);

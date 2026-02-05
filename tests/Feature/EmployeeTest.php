@@ -109,6 +109,11 @@ class EmployeeTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john.doe@example.com',
+            'phone_number' => '555-1234',
+            'work_in' => '09:00',
+            'work_out' => '17:00',
+            'job_title' => 'Software Engineer',
+            'department' => 'Engineering',
         ]);
 
         $response->assertRedirect(route('employees.index'));
@@ -119,6 +124,11 @@ class EmployeeTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john.doe@example.com',
+            'phone_number' => '555-1234',
+            'work_in' => '09:00',
+            'work_out' => '17:00',
+            'job_title' => 'Software Engineer',
+            'department' => 'Engineering',
         ]);
     }
 
@@ -134,6 +144,9 @@ class EmployeeTest extends TestCase
             'first_name' => '  John  ',
             'last_name' => '  Doe  ',
             'email' => ' JOHN.DOE@EXAMPLE.COM ',
+            'phone_number' => '  555-1234  ',
+            'job_title' => '  Software Engineer  ',
+            'department' => '  Engineering  ',
         ]);
 
         $response->assertRedirect(route('employees.index'));
@@ -143,6 +156,9 @@ class EmployeeTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john.doe@example.com',
+            'phone_number' => '555-1234',
+            'job_title' => 'Software Engineer',
+            'department' => 'Engineering',
         ]);
     }
 
@@ -275,6 +291,11 @@ class EmployeeTest extends TestCase
             'first_name' => 'Updated',
             'last_name' => 'Name',
             'email' => 'updated@example.com',
+            'phone_number' => '555-9999',
+            'work_in' => '08:00',
+            'work_out' => '16:00',
+            'job_title' => 'Senior Engineer',
+            'department' => 'Technology',
         ]);
 
         $response->assertRedirect(route('employees.index'));
@@ -285,6 +306,11 @@ class EmployeeTest extends TestCase
             'first_name' => 'Updated',
             'last_name' => 'Name',
             'email' => 'updated@example.com',
+            'phone_number' => '555-9999',
+            'work_in' => '08:00',
+            'work_out' => '16:00',
+            'job_title' => 'Senior Engineer',
+            'department' => 'Technology',
         ]);
     }
 
@@ -301,6 +327,9 @@ class EmployeeTest extends TestCase
             'first_name' => '  Jane  ',
             'last_name' => '  Doe  ',
             'email' => ' JANE.DOE@EXAMPLE.COM ',
+            'phone_number' => '  555-4321  ',
+            'job_title' => '  Manager  ',
+            'department' => '  Operations  ',
         ]);
 
         $response->assertRedirect(route('employees.index'));
@@ -310,6 +339,9 @@ class EmployeeTest extends TestCase
             'first_name' => 'Jane',
             'last_name' => 'Doe',
             'email' => 'jane.doe@example.com',
+            'phone_number' => '555-4321',
+            'job_title' => 'Manager',
+            'department' => 'Operations',
         ]);
     }
 

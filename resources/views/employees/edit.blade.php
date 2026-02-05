@@ -1,7 +1,13 @@
 <x-layouts::app :title="__('Edit :name - BasicEMS', ['name' => $employee->full_name])">
     <div class="flex h-full w-full flex-1 flex-col gap-6">
         <div class="flex items-center gap-4">
-            <flux:button href="{{ route('employees.index') }}" variant="ghost" icon="arrow-left" wire:navigate />
+            <flux:button
+                href="{{ route('employees.index') }}"
+                variant="ghost"
+                icon="arrow-left"
+                aria-label="{{ __('Back to employees') }}"
+                wire:navigate
+            />
             <flux:heading size="xl">{{ __('Edit Employee') }}</flux:heading>
         </div>
 
@@ -18,6 +24,7 @@
                             name="first_name"
                             value="{{ old('first_name', $employee->first_name) }}"
                             placeholder="{{ __('Enter first name') }}"
+                            autocomplete="given-name"
                             required
                             autofocus
                         />
@@ -31,6 +38,7 @@
                             name="last_name"
                             value="{{ old('last_name', $employee->last_name) }}"
                             placeholder="{{ __('Enter last name') }}"
+                            autocomplete="family-name"
                             required
                         />
                         <flux:error name="last_name" />
@@ -43,9 +51,67 @@
                             name="email"
                             value="{{ old('email', $employee->email) }}"
                             placeholder="{{ __('Enter email address') }}"
+                            autocomplete="email"
                             required
                         />
                         <flux:error name="email" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('Phone Number') }}</flux:label>
+                        <flux:input
+                            type="tel"
+                            name="phone_number"
+                            value="{{ old('phone_number', $employee->phone_number) }}"
+                            placeholder="{{ __('Enter phone number') }}"
+                            autocomplete="tel"
+                            inputmode="tel"
+                        />
+                        <flux:error name="phone_number" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('Department') }}</flux:label>
+                        <flux:input
+                            type="text"
+                            name="department"
+                            value="{{ old('department', $employee->department) }}"
+                            placeholder="{{ __('Enter department') }}"
+                            autocomplete="organization"
+                        />
+                        <flux:error name="department" />
+                    </flux:field>
+
+                    <flux:field class="sm:col-span-2">
+                        <flux:label>{{ __('Job Title') }}</flux:label>
+                        <flux:input
+                            type="text"
+                            name="job_title"
+                            value="{{ old('job_title', $employee->job_title) }}"
+                            placeholder="{{ __('Enter job title') }}"
+                            autocomplete="organization-title"
+                        />
+                        <flux:error name="job_title" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('Work In') }}</flux:label>
+                        <flux:input
+                            type="time"
+                            name="work_in"
+                            value="{{ old('work_in', $employee->work_in) }}"
+                        />
+                        <flux:error name="work_in" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>{{ __('Work Out') }}</flux:label>
+                        <flux:input
+                            type="time"
+                            name="work_out"
+                            value="{{ old('work_out', $employee->work_out) }}"
+                        />
+                        <flux:error name="work_out" />
                     </flux:field>
                 </div>
 

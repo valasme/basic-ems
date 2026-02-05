@@ -38,6 +38,11 @@ class UpdateEmployeeRequest extends FormRequest
                 'max:255',
                 Rule::unique(Employee::class)->ignore($employee->id),
             ],
+            'phone_number' => ['nullable', 'string', 'max:50'],
+            'work_in' => ['nullable', 'date_format:H:i'],
+            'work_out' => ['nullable', 'date_format:H:i'],
+            'job_title' => ['nullable', 'string', 'max:255'],
+            'department' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -57,6 +62,15 @@ class UpdateEmployeeRequest extends FormRequest
                 ->trim()
                 ->lower()
                 ->toString(),
+            'phone_number' => $this->input('phone_number')
+                ? Str::of((string) $this->input('phone_number'))->squish()->toString()
+                : null,
+            'job_title' => $this->input('job_title')
+                ? Str::of((string) $this->input('job_title'))->squish()->toString()
+                : null,
+            'department' => $this->input('department')
+                ? Str::of((string) $this->input('department'))->squish()->toString()
+                : null,
         ]);
     }
 
@@ -79,6 +93,11 @@ class UpdateEmployeeRequest extends FormRequest
             'email.max' => 'The email address may not be greater than 255 characters.',
             'email.lowercase' => 'The email address must be lowercase.',
             'email.unique' => 'This email address is already in use.',
+            'phone_number.max' => 'The phone number may not be greater than 50 characters.',
+            'work_in.date_format' => 'The work in time must be in HH:MM format.',
+            'work_out.date_format' => 'The work out time must be in HH:MM format.',
+            'job_title.max' => 'The job title may not be greater than 255 characters.',
+            'department.max' => 'The department may not be greater than 255 characters.',
         ];
     }
 }

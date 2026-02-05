@@ -31,6 +31,11 @@ class EmployeeFactory extends Factory
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
+            'phone_number' => fake()->phoneNumber(),
+            'work_in' => fake()->time('H:i'),
+            'work_out' => fake()->time('H:i'),
+            'job_title' => fake()->jobTitle(),
+            'department' => fake()->randomElement(['Engineering', 'Marketing', 'Sales', 'Human Resources', 'Finance', 'Operations']),
         ];
     }
 

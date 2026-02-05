@@ -15,6 +15,11 @@ use Illuminate\Support\Str;
  * @property string $first_name
  * @property string $last_name
  * @property string $email
+ * @property string|null $phone_number
+ * @property string|null $work_in
+ * @property string|null $work_out
+ * @property string|null $job_title
+ * @property string|null $department
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property-read string $full_name
@@ -35,6 +40,11 @@ class Employee extends Model
         'first_name',
         'last_name',
         'email',
+        'phone_number',
+        'work_in',
+        'work_out',
+        'job_title',
+        'department',
     ];
 
     /**
