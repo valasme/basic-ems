@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class EmployeeSeeder extends Seeder
 {
@@ -15,14 +14,22 @@ class EmployeeSeeder extends Seeder
     private const EMPLOYEES_PER_USER = 25;
 
     /**
+     * The number of users to seed employees for.
+     */
+    private const USER_LIMIT = 5;
+
+    /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $users = User::query()->get();
+        $users = User::query()
+            ->orderBy('id')
+            ->limit(self::USER_LIMIT)
+            ->get();
 
         if ($users->isEmpty()) {
-            $users = collect([$this->getOrCreateTestUser()]);
+            return;
         }
 
         $users->each(function (User $user): void {
@@ -38,19 +45,5 @@ class EmployeeSeeder extends Seeder
                 ->forUser($user)
                 ->create();
         });
-    }
-
-    /**
-     * Get the first existing user or create a test user.
-     */
-    private function getOrCreateTestUser(): User
-    {
-        return User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test User',
-                'password' => Hash::make('password'),
-            ]
-        );
     }
 }

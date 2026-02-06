@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -24,6 +25,7 @@ use Illuminate\Support\Str;
  * @property \Illuminate\Support\Carbon $updated_at
  * @property-read string $full_name
  * @property-read User $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Task> $tasks
  */
 class Employee extends Model
 {
@@ -55,6 +57,16 @@ class Employee extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the tasks for the employee.
+     *
+     * @return HasMany<Task, $this>
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
     }
 
     /**

@@ -2,7 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Employee;
+use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class StoreTaskRequest extends FormRequest
 {
@@ -11,7 +15,7 @@ class StoreTaskRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->can('create', Task::class);
     }
 
     /**
@@ -22,7 +26,52 @@ class StoreTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'employee_id' => [
+                'bail',
+                'required',
+                'integer',
+                Rule::exists(Employee::class, 'id')->where('user_id', $this->user()->id),
+            ],
+            'title' => ['bail', 'required', 'string', 'min:3', 'max:255'],
+            'status' => ['bail', 'required', 'string', Rule::in(Task::STATUSES)],
+            'description' => ['bail', 'nullable', 'string', 'max:2000'],
+            'due_date' => ['bail', 'nullable', 'date', 'date_format:Y-m-d'],
+        ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'title' => Str::of((string) $this->input('title'))
+                ->squish()
+                ->toString(),
+            'description' => $this->input('description')
+                ? Str::of((string) $this->input('description'))->squish()->toString()
+                : null,
+            'due_date' => $this->input('due_date') ?: null,
+        ]);
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'employee_id.required' => 'Please select an employee for this task.',
+            'employee_id.exists' => 'The selected employee is invalid.',
+            'title.required' => 'The task title is required.',
+            'title.min' => 'The task title must be at least 3 characters.',
+            'title.max' => 'The task title may not be greater than 255 characters.',
+            'status.required' => 'Please choose a task status.',
+            'status.in' => 'The selected task status is invalid.',
+            'description.max' => 'The description may not be greater than 2000 characters.',
+            'due_date.date' => 'Please provide a valid due date.',
         ];
     }
 }
