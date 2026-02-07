@@ -48,6 +48,26 @@ class TaskManagementTest extends TestCase
         $searchByEmployee->assertSee($task->title);
     }
 
+    public function test_index_is_paginated_to_25_tasks_per_page(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+
+        Task::factory()
+            ->forEmployee($employee)
+            ->count(30)
+            ->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertViewHas('tasks', function ($tasks): bool {
+            return $tasks->count() === 25
+                && $tasks->perPage() === 25
+                && $tasks->total() === 30;
+        });
+    }
+
     public function test_user_can_create_task_for_their_employee(): void
     {
         $user = User::factory()->create();

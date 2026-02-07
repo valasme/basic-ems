@@ -45,6 +45,25 @@ class EmployeeManagementTest extends TestCase
         $searchResponse->assertDontSee($other->full_name);
     }
 
+    public function test_index_is_paginated_to_25_employees_per_page(): void
+    {
+        $user = User::factory()->create();
+
+        Employee::factory()
+            ->forUser($user)
+            ->count(30)
+            ->create();
+
+        $response = $this->actingAs($user)->get(route('employees.index'));
+
+        $response->assertOk();
+        $response->assertViewHas('employees', function ($employees): bool {
+            return $employees->count() === 25
+                && $employees->perPage() === 25
+                && $employees->total() === 30;
+        });
+    }
+
     public function test_user_can_create_employee_with_normalized_fields(): void
     {
         $user = User::factory()->create();
@@ -56,6 +75,8 @@ class EmployeeManagementTest extends TestCase
             'phone_number' => ' 555 123 4567 ',
             'work_in' => '09:00',
             'work_out' => '17:00',
+            'pay_day' => 15,
+            'pay_amount' => '1750.50',
             'job_title' => '  Coordinator ',
             'department' => '  Operations ',
         ]);
@@ -70,6 +91,8 @@ class EmployeeManagementTest extends TestCase
             'phone_number' => '555 123 4567',
             'work_in' => '09:00',
             'work_out' => '17:00',
+            'pay_day' => 15,
+            'pay_amount' => '1750.50',
             'job_title' => 'Coordinator',
             'department' => 'Operations',
         ]);
@@ -130,6 +153,8 @@ class EmployeeManagementTest extends TestCase
             'phone_number' => '555-999-0000',
             'work_in' => '08:30',
             'work_out' => '16:30',
+            'pay_day' => 20,
+            'pay_amount' => '1900.00',
             'job_title' => 'Analyst',
             'department' => 'Finance',
         ]);
@@ -143,6 +168,8 @@ class EmployeeManagementTest extends TestCase
             'email' => 'original@example.com',
             'job_title' => 'Analyst',
             'department' => 'Finance',
+            'pay_day' => 20,
+            'pay_amount' => '1900.00',
         ]);
     }
 

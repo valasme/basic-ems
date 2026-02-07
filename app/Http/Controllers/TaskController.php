@@ -6,6 +6,7 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Employee;
 use App\Models\Task;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,14 +25,15 @@ class TaskController extends Controller
         $search = $request->query('search');
         $user = $request->user();
 
-        /** @var Collection<int, Task> $tasks */
+        /** @var LengthAwarePaginator<Task> $tasks */
         $tasks = Task::query()
             ->select(['id', 'employee_id', 'title', 'status', 'due_date', 'created_at'])
             ->with(['employee:id,user_id,first_name,last_name'])
             ->ownedBy($user)
             ->search($search)
             ->latest()
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         return view('tasks.index', [
             'tasks' => $tasks,

@@ -31,6 +31,8 @@ class StoreEmployeeRequest extends FormRequest
             'phone_number' => ['nullable', 'string', 'max:50'],
             'work_in' => ['nullable', 'date_format:H:i'],
             'work_out' => ['nullable', 'date_format:H:i'],
+            'pay_day' => ['nullable', 'integer', 'min:1', 'max:31'],
+            'pay_amount' => ['nullable', 'numeric', 'min:0'],
             'job_title' => ['nullable', 'string', 'max:255'],
             'department' => ['nullable', 'string', 'max:255'],
         ];
@@ -86,6 +88,11 @@ class StoreEmployeeRequest extends FormRequest
             'phone_number.max' => 'The phone number may not be greater than 50 characters.',
             'work_in.date_format' => 'The work in time must be in HH:MM format.',
             'work_out.date_format' => 'The work out time must be in HH:MM format.',
+            'pay_day.integer' => 'The pay day must be a whole number (day of month).',
+            'pay_day.min' => 'The pay day must be at least 1 (day of month).',
+            'pay_day.max' => 'The pay day may not be greater than 31 (day of month).',
+            'pay_amount.numeric' => 'The pay amount must be a number.',
+            'pay_amount.min' => 'The pay amount must be at least 0.',
             'job_title.max' => 'The job title may not be greater than 255 characters.',
             'department.max' => 'The department may not be greater than 255 characters.',
         ];

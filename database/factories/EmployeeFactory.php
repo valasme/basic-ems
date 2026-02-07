@@ -34,6 +34,8 @@ class EmployeeFactory extends Factory
             'phone_number' => fake()->phoneNumber(),
             'work_in' => fake()->time('H:i'),
             'work_out' => fake()->time('H:i'),
+            'pay_day' => fake()->optional()->numberBetween(1, 28),
+            'pay_amount' => fake()->randomFloat(2, 1200, 3000),
             'job_title' => fake()->jobTitle(),
             'department' => fake()->randomElement(['Engineering', 'Marketing', 'Sales', 'Human Resources', 'Finance', 'Operations']),
         ];

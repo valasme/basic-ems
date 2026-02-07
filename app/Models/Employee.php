@@ -19,6 +19,8 @@ use Illuminate\Support\Str;
  * @property string|null $phone_number
  * @property string|null $work_in
  * @property string|null $work_out
+ * @property int|null $pay_day
+ * @property string $pay_amount
  * @property string|null $job_title
  * @property string|null $department
  * @property \Illuminate\Support\Carbon $created_at
@@ -45,6 +47,8 @@ class Employee extends Model
         'phone_number',
         'work_in',
         'work_out',
+        'pay_day',
+        'pay_amount',
         'job_title',
         'department',
     ];

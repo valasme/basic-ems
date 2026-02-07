@@ -69,6 +69,18 @@
                         <flux:heading size="sm" class="mt-1">{{ $employee->work_out ?? '-' }}</flux:heading>
                     </div>
                     <div>
+                        <flux:subheading>{{ __('Pay Day') }}</flux:subheading>
+                        <flux:heading size="sm" class="mt-1">
+                            {{ $employee->pay_day ? __('Every month on day :day', ['day' => $employee->pay_day]) : '-' }}
+                        </flux:heading>
+                    </div>
+                    <div>
+                        <flux:subheading>{{ __('Pay Amount') }}</flux:subheading>
+                        <flux:heading size="sm" class="mt-1">
+                            {{ number_format((float) $employee->pay_amount, 2) }}
+                        </flux:heading>
+                    </div>
+                    <div>
                         <flux:subheading>{{ __('Created') }}</flux:subheading>
                         <flux:heading size="sm" class="mt-1">{{ $employee->created_at->format('M d, Y \a\t g:i A') }}</flux:heading>
                     </div>

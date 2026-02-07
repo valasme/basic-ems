@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
 use App\Models\Employee;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 
 class EmployeeController extends Controller
 {
@@ -22,12 +22,13 @@ class EmployeeController extends Controller
         /** @var string|null $search */
         $search = $request->query('search');
 
-        /** @var Collection<int, Employee> $employees */
+        /** @var LengthAwarePaginator<Employee> $employees */
         $employees = $request->user()
             ->employees()
             ->search($search)
             ->orderByName()
-            ->get();
+            ->paginate(25)
+            ->withQueryString();
 
         return view('employees.index', [
             'employees' => $employees,

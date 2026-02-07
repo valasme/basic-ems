@@ -177,6 +177,12 @@
 					@endforeach
 				</flux:table.rows>
 			</flux:table>
+
+			@if ($tasks->hasPages())
+				<div class="flex justify-end">
+					{{ $tasks->onEachSide(1)->links() }}
+				</div>
+			@endif
 		@endif
 	</div>
 </x-layouts::app>

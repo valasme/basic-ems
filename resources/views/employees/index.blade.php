@@ -153,6 +153,12 @@
                     @endforeach
                 </flux:table.rows>
             </flux:table>
+
+            @if ($employees->hasPages())
+                <div class="flex justify-end">
+                    {{ $employees->onEachSide(1)->links() }}
+                </div>
+            @endif
         @endif
     </div>
 </x-layouts::app>
