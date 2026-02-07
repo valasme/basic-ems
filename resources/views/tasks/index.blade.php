@@ -142,6 +142,8 @@
 											icon="trash"
 											aria-label="{{ __('Delete :title', ['title' => $task->title]) }}"
 											title="{{ __('Delete') }}"
+											x-data=""
+											x-on:click.prevent="$dispatch('open-modal', 'delete-task-{{ $task->id }}')"
 										/>
 									</flux:modal.trigger>
 								</div>

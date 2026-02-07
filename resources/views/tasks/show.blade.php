@@ -45,7 +45,12 @@
 							{{ __('Edit') }}
 						</flux:button>
 						<flux:modal.trigger name="delete-task">
-							<flux:button variant="ghost" icon="trash">
+							<flux:button
+								variant="ghost"
+								icon="trash"
+								x-data=""
+								x-on:click.prevent="$dispatch('open-modal', 'delete-task')"
+							>
 								{{ __('Delete') }}
 							</flux:button>
 						</flux:modal.trigger>
