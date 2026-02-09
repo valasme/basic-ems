@@ -10,7 +10,8 @@ WARNING: This platform is intentionally scoped for really small businesses or pe
 
 - Employee directory with contact info, department, job title, and work times.
 - Task management with status, due date, and employee assignment.
-- Search across employees and tasks.
+- Notes system with title and optional description.
+- Search across employees, tasks, and notes.
 - Authentication with Fortify, including optional two-factor settings.
 - Per-user ownership with policies to keep data scoped to the signed-in user.
 
@@ -81,7 +82,7 @@ This starts the Laravel server, queue listener, and Vite dev server together.
 php artisan db:seed
 ```
 
-This creates a test user (`test@example.com`) and seeds employees and tasks.
+This creates a test user (`test@example.com`) and seeds employees, tasks, and notes.
 
 ## Notes
 
