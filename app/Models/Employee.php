@@ -97,12 +97,28 @@ class Employee extends Model
             ->squish()
             ->toString();
 
-        return $query->when($searchTerm !== '', fn (Builder $q): Builder => $q->where(
-            fn (Builder $subQuery): Builder => $subQuery
-                ->where('first_name', 'like', "%{$searchTerm}%")
-                ->orWhere('last_name', 'like', "%{$searchTerm}%")
-                ->orWhere('email', 'like', "%{$searchTerm}%")
-        ));
+        if ($searchTerm === '') {
+            return $query;
+        }
+
+        $words = explode(' ', $searchTerm);
+
+        return $query->where(function (Builder $subQuery) use ($words, $searchTerm): void {
+            // Match each word against first_name, last_name, or email
+            foreach ($words as $word) {
+                $subQuery->where(fn (Builder $q): Builder => $q
+                    ->where('first_name', 'like', "%{$word}%")
+                    ->orWhere('last_name', 'like', "%{$word}%")
+                    ->orWhere('email', 'like', "%{$word}%")
+                );
+            }
+
+            // Also allow exact full name match via concatenation (database-agnostic)
+            $subQuery->orWhereRaw(
+                "LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?",
+                ['%'.mb_strtolower($searchTerm).'%']
+            );
+        });
     }
 
     /**

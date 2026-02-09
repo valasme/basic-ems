@@ -46,6 +46,10 @@ class TaskManagementTest extends TestCase
         $searchByEmployee = $this->actingAs($user)->get(route('tasks.index', ['search' => 'Maria']));
         $searchByEmployee->assertOk();
         $searchByEmployee->assertSee($task->title);
+
+        $searchByFullName = $this->actingAs($user)->get(route('tasks.index', ['search' => 'Maria Lopez']));
+        $searchByFullName->assertOk();
+        $searchByFullName->assertSee($task->title);
     }
 
     public function test_index_is_paginated_to_25_tasks_per_page(): void

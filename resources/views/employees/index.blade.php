@@ -118,41 +118,45 @@
                                             icon="trash"
                                             aria-label="{{ __('Delete :name', ['name' => $employee->full_name]) }}"
                                             title="{{ __('Delete') }}"
+                                            x-data=""
+                                            x-on:click.prevent="$dispatch('open-modal', 'delete-employee-{{ $employee->id }}')"
                                         />
                                     </flux:modal.trigger>
                                 </div>
                             </flux:table.cell>
                         </flux:table.row>
-
-                        <flux:modal
-                            :name="'delete-employee-' . $employee->id"
-                            aria-labelledby="delete-employee-{{ $employee->id }}-title"
-                            aria-describedby="delete-employee-{{ $employee->id }}-desc"
-                            class="md:w-96"
-                        >
-                            <div class="space-y-6">
-                                <div>
-                                    <flux:heading id="delete-employee-{{ $employee->id }}-title" size="lg">{{ __('Delete Employee') }}</flux:heading>
-                                    <flux:subheading id="delete-employee-{{ $employee->id }}-desc" class="mt-2">
-                                        {{ __('Are you sure you want to delete :name? This action cannot be undone.', ['name' => $employee->full_name]) }}
-                                    </flux:subheading>
-                                </div>
-                                <div class="flex gap-3">
-                                    <flux:spacer />
-                                    <flux:modal.close>
-                                        <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
-                                    </flux:modal.close>
-                                    <form method="POST" action="{{ route('employees.destroy', $employee) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <flux:button type="submit" variant="danger">{{ __('Delete') }}</flux:button>
-                                    </form>
-                                </div>
-                            </div>
-                        </flux:modal>
                     @endforeach
                 </flux:table.rows>
             </flux:table>
+
+            @foreach ($employees as $employee)
+                <flux:modal
+                    :name="'delete-employee-' . $employee->id"
+                    aria-labelledby="delete-employee-{{ $employee->id }}-title"
+                    aria-describedby="delete-employee-{{ $employee->id }}-desc"
+                    class="md:w-96"
+                >
+                    <div class="space-y-6">
+                        <div>
+                            <flux:heading id="delete-employee-{{ $employee->id }}-title" size="lg">{{ __('Delete Employee') }}</flux:heading>
+                            <flux:subheading id="delete-employee-{{ $employee->id }}-desc" class="mt-2">
+                                {{ __('Are you sure you want to delete :name? This action cannot be undone.', ['name' => $employee->full_name]) }}
+                            </flux:subheading>
+                        </div>
+                        <div class="flex gap-3">
+                            <flux:spacer />
+                            <flux:modal.close>
+                                <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                            </flux:modal.close>
+                            <form method="POST" action="{{ route('employees.destroy', $employee) }}">
+                                @csrf
+                                @method('DELETE')
+                                <flux:button type="submit" variant="danger">{{ __('Delete') }}</flux:button>
+                            </form>
+                        </div>
+                    </div>
+                </flux:modal>
+            @endforeach
 
             @if ($employees->hasPages())
                 <div class="flex justify-end">

@@ -149,36 +149,38 @@
 								</div>
 							</flux:table.cell>
 						</flux:table.row>
-
-						<flux:modal
-							:name="'delete-task-' . $task->id"
-							aria-labelledby="delete-task-{{ $task->id }}-title"
-							aria-describedby="delete-task-{{ $task->id }}-desc"
-							class="md:w-96"
-						>
-							<div class="space-y-6">
-								<div>
-									<flux:heading id="delete-task-{{ $task->id }}-title" size="lg">{{ __('Delete Task') }}</flux:heading>
-									<flux:subheading id="delete-task-{{ $task->id }}-desc" class="mt-2">
-										{{ __('Are you sure you want to delete :title? This action cannot be undone.', ['title' => $task->title]) }}
-									</flux:subheading>
-								</div>
-								<div class="flex gap-3">
-									<flux:spacer />
-									<flux:modal.close>
-										<flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
-									</flux:modal.close>
-									<form method="POST" action="{{ route('tasks.destroy', $task) }}">
-										@csrf
-										@method('DELETE')
-										<flux:button type="submit" variant="danger">{{ __('Delete') }}</flux:button>
-									</form>
-								</div>
-							</div>
-						</flux:modal>
 					@endforeach
 				</flux:table.rows>
 			</flux:table>
+
+			@foreach ($tasks as $task)
+				<flux:modal
+					:name="'delete-task-' . $task->id"
+					aria-labelledby="delete-task-{{ $task->id }}-title"
+					aria-describedby="delete-task-{{ $task->id }}-desc"
+					class="md:w-96"
+				>
+					<div class="space-y-6">
+						<div>
+							<flux:heading id="delete-task-{{ $task->id }}-title" size="lg">{{ __('Delete Task') }}</flux:heading>
+							<flux:subheading id="delete-task-{{ $task->id }}-desc" class="mt-2">
+								{{ __('Are you sure you want to delete :title? This action cannot be undone.', ['title' => $task->title]) }}
+							</flux:subheading>
+						</div>
+						<div class="flex gap-3">
+							<flux:spacer />
+							<flux:modal.close>
+								<flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+							</flux:modal.close>
+							<form method="POST" action="{{ route('tasks.destroy', $task) }}">
+								@csrf
+								@method('DELETE')
+								<flux:button type="submit" variant="danger">{{ __('Delete') }}</flux:button>
+							</form>
+						</div>
+					</div>
+				</flux:modal>
+			@endforeach
 
 			@if ($tasks->hasPages())
 				<div class="flex justify-end">

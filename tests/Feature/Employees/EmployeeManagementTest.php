@@ -43,6 +43,11 @@ class EmployeeManagementTest extends TestCase
         $searchResponse->assertOk();
         $searchResponse->assertSee($owned->full_name);
         $searchResponse->assertDontSee($other->full_name);
+
+        $fullNameSearch = $this->actingAs($user)->get(route('employees.index', ['search' => 'Ava Stone']));
+        $fullNameSearch->assertOk();
+        $fullNameSearch->assertSee($owned->full_name);
+        $fullNameSearch->assertDontSee($other->full_name);
     }
 
     public function test_index_is_paginated_to_25_employees_per_page(): void

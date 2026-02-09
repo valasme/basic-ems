@@ -52,19 +52,21 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the user's initials
+     * Get the user's initials.
      */
     public function initials(): string
     {
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn (string $word): string => Str::substr($word, 0, 1))
             ->implode('');
     }
 
     /**
      * Get the employees owned by the user.
+     *
+     * @return HasMany<Employee, $this>
      */
     public function employees(): HasMany
     {
@@ -73,9 +75,21 @@ class User extends Authenticatable
 
     /**
      * Get the tasks owned by the user.
+     *
+     * @return HasMany<Task, $this>
      */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Get the notes owned by the user.
+     *
+     * @return HasMany<Note, $this>
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class);
     }
 }

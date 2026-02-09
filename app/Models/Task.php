@@ -8,6 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $employee_id
+ * @property string $title
+ * @property string $status
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon|null $due_date
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property-read User $user
+ * @property-read Employee $employee
+ */
 class Task extends Model
 {
     /** @use HasFactory<\Database\Factories\TaskFactory> */
@@ -86,13 +99,24 @@ class Task extends Model
             return $query;
         }
 
+        $words = explode(' ', $searchTerm);
+
         return $query->where(
             fn (Builder $subQuery): Builder => $subQuery
                 ->where('title', 'like', "%{$searchTerm}%")
-                ->orWhereHas('employee', fn (Builder $employeeQuery): Builder => $employeeQuery
-                    ->where('first_name', 'like', "%{$searchTerm}%")
-                    ->orWhere('last_name', 'like', "%{$searchTerm}%")
-                )
+                ->orWhereHas('employee', function (Builder $employeeQuery) use ($words, $searchTerm): void {
+                    foreach ($words as $word) {
+                        $employeeQuery->where(fn (Builder $q): Builder => $q
+                            ->where('first_name', 'like', "%{$word}%")
+                            ->orWhere('last_name', 'like', "%{$word}%")
+                        );
+                    }
+
+                    $employeeQuery->orWhereRaw(
+                        "LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?",
+                        ['%'.mb_strtolower($searchTerm).'%']
+                    );
+                })
         );
     }
 

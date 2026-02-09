@@ -52,7 +52,7 @@ class TaskSeeder extends Seeder
 
             Task::factory()
                 ->count($tasksToCreate)
-                ->state(fn (): array => [
+                ->state(fn (array $attributes): array => [
                     'employee_id' => $employees->random()->id,
                     'user_id' => $user->id,
                 ])
