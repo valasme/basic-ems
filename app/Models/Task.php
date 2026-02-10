@@ -11,15 +11,16 @@ use Illuminate\Support\Str;
 /**
  * @property int $id
  * @property int $user_id
- * @property int $employee_id
+ * @property int|null $employee_id
  * @property string $title
  * @property string $status
+ * @property string $priority
  * @property string|null $description
  * @property \Illuminate\Support\Carbon|null $due_date
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property-read User $user
- * @property-read Employee $employee
+ * @property-read Employee|null $employee
  */
 class Task extends Model
 {
@@ -38,6 +39,19 @@ class Task extends Model
     ];
 
     /**
+     * Allowed task priorities.
+     *
+     * @var list<string>
+     */
+    public const PRIORITIES = [
+        'urgent',
+        'high',
+        'medium',
+        'low',
+        'none',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -47,6 +61,7 @@ class Task extends Model
         'employee_id',
         'title',
         'status',
+        'priority',
         'description',
         'due_date',
     ];
@@ -129,5 +144,16 @@ class Task extends Model
     public function scopeOwnedBy(Builder $query, User $user): Builder
     {
         return $query->where('user_id', $user->id);
+    }
+
+    /**
+     * Scope a query to urgent tasks.
+     *
+     * @param  Builder<Task>  $query
+     * @return Builder<Task>
+     */
+    public function scopeUrgent(Builder $query): Builder
+    {
+        return $query->where('priority', 'urgent');
     }
 }

@@ -80,9 +80,15 @@
                         </flux:heading>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Pay Amount') }}</flux:subheading>
+                        <flux:subheading>{{ __('Pay Amount (Monthly)') }}</flux:subheading>
                         <flux:heading size="sm" class="mt-1">
                             {{ number_format((float) $employee->pay_amount, 2) }}
+                        </flux:heading>
+                    </div>
+                    <div>
+                        <flux:subheading>{{ __('Salary (Yearly)') }}</flux:subheading>
+                        <flux:heading size="sm" class="mt-1">
+                            {{ $employee->pay_salary !== null ? number_format((float) $employee->pay_salary, 2) : '-' }}
                         </flux:heading>
                     </div>
                     <div>

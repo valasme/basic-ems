@@ -98,6 +98,7 @@ class EmployeeManagementTest extends TestCase
             'work_out' => '17:00',
             'pay_day' => 15,
             'pay_amount' => '1750.50',
+            'pay_salary' => '21006.00',
             'job_title' => 'Coordinator',
             'department' => 'Operations',
         ]);
@@ -175,6 +176,7 @@ class EmployeeManagementTest extends TestCase
             'department' => 'Finance',
             'pay_day' => 20,
             'pay_amount' => '1900.00',
+            'pay_salary' => '22800.00',
         ]);
     }
 

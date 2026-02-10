@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Employee;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -26,15 +27,31 @@ class TaskFactory extends Factory
     public function definition(): array
     {
         $dueDate = fake()->optional(0.6)->date('Y-m-d');
+        $status = fake()->randomElement(Task::STATUSES);
+        $priorities = array_values(array_diff(Task::PRIORITIES, ['none']));
+        $priority = $status === 'completed'
+            ? 'none'
+            : fake()->randomElement($priorities);
 
         return [
             'employee_id' => Employee::factory(),
-            'user_id' => fn (array $attributes): int => Employee::query()
-                ->select(['user_id'])
-                ->findOrFail($attributes['employee_id'])
-                ->user_id,
+            'user_id' => function (array $attributes): int|User {
+                if (array_key_exists('user_id', $attributes) && $attributes['user_id'] !== null) {
+                    return $attributes['user_id'];
+                }
+
+                if (! empty($attributes['employee_id'])) {
+                    return Employee::query()
+                        ->select(['user_id'])
+                        ->findOrFail($attributes['employee_id'])
+                        ->user_id;
+                }
+
+                return User::factory();
+            },
             'title' => fake()->sentence(3),
-            'status' => fake()->randomElement(Task::STATUSES),
+            'status' => $status,
+            'priority' => $priority,
             'description' => fake()->optional()->sentence(12),
             'due_date' => $dueDate,
         ];
@@ -48,6 +65,17 @@ class TaskFactory extends Factory
         return $this->state(fn (array $attributes): array => [
             'employee_id' => $employee->id,
             'user_id' => $employee->user_id,
+        ]);
+    }
+
+    /**
+     * State for an unassigned task that belongs to a user.
+     */
+    public function forUser(User $user): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'employee_id' => null,
+            'user_id' => $user->id,
         ]);
     }
 }

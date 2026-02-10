@@ -18,9 +18,21 @@
 					'in_progress' => __('In Progress'),
 					'completed' => __('Completed'),
 				];
+
+				$priorities = [
+					'urgent' => __('Urgent'),
+					'high' => __('High'),
+					'medium' => __('Medium'),
+					'low' => __('Low'),
+				];
 			@endphp
 
-			<form method="POST" action="{{ route('tasks.update', $task) }}" class="flex h-full flex-col gap-6">
+			<form
+				method="POST"
+				action="{{ route('tasks.update', $task) }}"
+				class="flex h-full flex-col gap-6"
+				x-data="{ status: '{{ old('status', $task->status) }}' }"
+			>
 				@csrf
 				@method('PUT')
 
@@ -40,8 +52,8 @@
 
 					<flux:field>
 						<flux:label>{{ __('Employee') }}</flux:label>
-						<flux:select name="employee_id" required>
-							<option value="" @selected(old('employee_id', $task->employee_id) === null)>{{ __('Select an employee') }}</option>
+						<flux:select name="employee_id">
+							<option value="" @selected(old('employee_id', $task->employee_id) === null)>{{ __('No employee') }}</option>
 							@foreach ($employees as $employee)
 								<option value="{{ $employee->id }}" @selected(old('employee_id', $task->employee_id) == $employee->id)>
 									{{ $employee->full_name }}
@@ -53,7 +65,7 @@
 
 					<flux:field>
 						<flux:label>{{ __('Status') }}</flux:label>
-						<flux:select name="status" required>
+						<flux:select name="status" x-model="status" required>
 							@foreach ($statuses as $value => $label)
 								<option value="{{ $value }}" @selected(old('status', $task->status) === $value)>
 									{{ $label }}
@@ -62,6 +74,21 @@
 						</flux:select>
 						<flux:error name="status" />
 					</flux:field>
+
+					<flux:field x-show="status !== 'completed'">
+						<flux:label>{{ __('Priority') }}</flux:label>
+						<flux:select name="priority" required>
+							@foreach ($priorities as $value => $label)
+								<option value="{{ $value }}" @selected(old('priority', $task->priority) === $value)>
+									{{ $label }}
+								</option>
+							@endforeach
+						</flux:select>
+						<flux:error name="priority" />
+					</flux:field>
+					<template x-if="status === 'completed'">
+						<input type="hidden" name="priority" value="none">
+					</template>
 
 					<flux:field>
 						<flux:label>{{ __('Due Date') }}</flux:label>

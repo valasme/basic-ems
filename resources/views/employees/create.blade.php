@@ -127,14 +127,14 @@
                     </flux:field>
 
                     <flux:field>
-                        <flux:label>{{ __('Pay Amount') }}</flux:label>
+                        <flux:label>{{ __('Pay Amount (Monthly)') }}</flux:label>
                         <flux:input
                             type="number"
                             name="pay_amount"
                             step="0.01"
                             min="0"
                             value="{{ old('pay_amount') }}"
-                            placeholder="{{ __('Enter pay amount') }}"
+                            placeholder="{{ __('Enter monthly pay amount') }}"
                         />
                         <flux:error name="pay_amount" />
                     </flux:field>

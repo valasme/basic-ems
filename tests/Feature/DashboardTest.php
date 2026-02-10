@@ -50,4 +50,44 @@ class DashboardTest extends TestCase
         $response->assertViewHas('tasksCount', 4);
         $response->assertViewHas('notesCount', 5);
     }
+
+    public function test_dashboard_only_shows_urgent_tasks_for_the_authenticated_user(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+        $urgentTask = Task::factory()->forEmployee($employee)->create([
+            'title' => 'Urgent payroll review',
+            'priority' => 'urgent',
+        ]);
+        $unassignedUrgentTask = Task::factory()->forUser($user)->create([
+            'title' => 'Unassigned urgent task',
+            'priority' => 'urgent',
+        ]);
+        $nonUrgentTask = Task::factory()->forEmployee($employee)->create([
+            'title' => 'Medium priority filing',
+            'priority' => 'medium',
+        ]);
+
+        $otherUser = User::factory()->create();
+        $otherEmployee = Employee::factory()->forUser($otherUser)->create();
+        $otherUrgentTask = Task::factory()->forEmployee($otherEmployee)->create([
+            'title' => 'Other urgent task',
+            'priority' => 'urgent',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee($urgentTask->title);
+        $response->assertSee($unassignedUrgentTask->title);
+        $response->assertSee(__('Unassigned'));
+        $response->assertDontSee($nonUrgentTask->title);
+        $response->assertDontSee($otherUrgentTask->title);
+        $response->assertViewHas('urgentTasks', function ($urgentTasks) use ($urgentTask, $unassignedUrgentTask, $otherUrgentTask): bool {
+            return $urgentTasks->contains('id', $urgentTask->id)
+                && $urgentTasks->contains('id', $unassignedUrgentTask->id)
+                && ! $urgentTasks->contains('id', $otherUrgentTask->id)
+                && $urgentTasks->every(fn (Task $task): bool => $task->priority === 'urgent');
+        });
+    }
 }

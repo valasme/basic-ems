@@ -27,7 +27,7 @@ class TaskController extends Controller
 
         /** @var LengthAwarePaginator<Task> $tasks */
         $tasks = Task::query()
-            ->select(['id', 'employee_id', 'title', 'status', 'due_date', 'created_at'])
+            ->select(['id', 'employee_id', 'title', 'status', 'priority', 'due_date', 'created_at'])
             ->with(['employee:id,user_id,first_name,last_name'])
             ->ownedBy($user)
             ->search($search)

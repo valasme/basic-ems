@@ -83,6 +83,22 @@
 					'in_progress' => 'blue',
 					'completed' => 'green',
 				];
+
+				$priorityLabels = [
+					'urgent' => __('Urgent'),
+					'high' => __('High'),
+					'medium' => __('Medium'),
+					'low' => __('Low'),
+					'none' => __('None'),
+				];
+
+				$priorityColors = [
+					'urgent' => 'red',
+					'high' => 'orange',
+					'medium' => 'sky',
+					'low' => 'zinc',
+					'none' => 'zinc',
+				];
 			@endphp
 
 			<flux:table>
@@ -90,6 +106,7 @@
 					<flux:table.column>{{ __('Title') }}</flux:table.column>
 					<flux:table.column>{{ __('Employee') }}</flux:table.column>
 					<flux:table.column>{{ __('Status') }}</flux:table.column>
+					<flux:table.column>{{ __('Priority') }}</flux:table.column>
 					<flux:table.column>{{ __('Due Date') }}</flux:table.column>
 					<flux:table.column align="end">{{ __('Actions') }}</flux:table.column>
 				</flux:table.columns>
@@ -99,6 +116,8 @@
 						@php
 							$statusLabel = $statusLabels[$task->status] ?? ucfirst(str_replace('_', ' ', $task->status));
 							$statusColor = $statusColors[$task->status] ?? 'zinc';
+							$priorityLabel = $priorityLabels[$task->priority] ?? ucfirst($task->priority);
+							$priorityColor = $priorityColors[$task->priority] ?? 'zinc';
 						@endphp
 						<flux:table.row :key="$task->id">
 							<flux:table.cell variant="strong">
@@ -107,12 +126,19 @@
 								</a>
 							</flux:table.cell>
 							<flux:table.cell>
-								<a href="{{ route('employees.show', $task->employee) }}" class="hover:underline" wire:navigate>
-									{{ $task->employee->full_name }}
-								</a>
+								@if ($task->employee)
+									<a href="{{ route('employees.show', $task->employee) }}" class="hover:underline" wire:navigate>
+										{{ $task->employee->full_name }}
+									</a>
+								@else
+									{{ __('Unassigned') }}
+								@endif
 							</flux:table.cell>
 							<flux:table.cell>
 								<flux:badge :color="$statusColor">{{ $statusLabel }}</flux:badge>
+							</flux:table.cell>
+							<flux:table.cell>
+								<flux:badge :color="$priorityColor">{{ $priorityLabel }}</flux:badge>
 							</flux:table.cell>
 							<flux:table.cell>{{ $task->due_date?->format('M d, Y') ?? '-' }}</flux:table.cell>
 							<flux:table.cell align="end">

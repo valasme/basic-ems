@@ -21,6 +21,7 @@ use Illuminate\Support\Str;
  * @property string|null $work_out
  * @property int|null $pay_day
  * @property string $pay_amount
+ * @property string|null $pay_salary
  * @property string|null $job_title
  * @property string|null $department
  * @property \Illuminate\Support\Carbon $created_at
@@ -82,6 +83,31 @@ class Employee extends Model
             get: fn (): string => Str::of("{$this->first_name} {$this->last_name}")
                 ->squish()
                 ->toString(),
+        );
+    }
+
+    /**
+     * Keep yearly salary in sync with monthly pay amount.
+     */
+    protected function payAmount(): Attribute
+    {
+        return Attribute::make(
+            set: function ($value): array {
+                if ($value === null || $value === '') {
+                    return [
+                        'pay_amount' => null,
+                        'pay_salary' => null,
+                    ];
+                }
+
+                $monthly = round((float) $value, 2);
+                $annual = round($monthly * 12, 2);
+
+                return [
+                    'pay_amount' => number_format($monthly, 2, '.', ''),
+                    'pay_salary' => number_format($annual, 2, '.', ''),
+                ];
+            },
         );
     }
 

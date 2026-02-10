@@ -24,8 +24,26 @@
 				'completed' => 'green',
 			];
 
+			$priorityLabels = [
+				'urgent' => __('Urgent'),
+				'high' => __('High'),
+				'medium' => __('Medium'),
+				'low' => __('Low'),
+				'none' => __('None'),
+			];
+
+			$priorityColors = [
+				'urgent' => 'red',
+				'high' => 'orange',
+				'medium' => 'sky',
+				'low' => 'zinc',
+				'none' => 'zinc',
+			];
+
 			$statusLabel = $statusLabels[$task->status] ?? ucfirst(str_replace('_', ' ', $task->status));
 			$statusColor = $statusColors[$task->status] ?? 'zinc';
+			$priorityLabel = $priorityLabels[$task->priority] ?? ucfirst($task->priority);
+			$priorityColor = $priorityColors[$task->priority] ?? 'zinc';
 		@endphp
 
 		<flux:card class="flex-1">
@@ -34,11 +52,16 @@
 					<div class="space-y-2">
 						<flux:heading size="lg">{{ $task->title }}</flux:heading>
 						<flux:subheading>
-							<a href="{{ route('employees.show', $task->employee) }}" class="hover:underline" wire:navigate>
-								{{ $task->employee->full_name }}
-							</a>
+							@if ($task->employee)
+								<a href="{{ route('employees.show', $task->employee) }}" class="hover:underline" wire:navigate>
+									{{ $task->employee->full_name }}
+								</a>
+							@else
+								{{ __('Unassigned') }}
+							@endif
 						</flux:subheading>
 						<flux:badge :color="$statusColor">{{ $statusLabel }}</flux:badge>
+						<flux:badge :color="$priorityColor">{{ $priorityLabel }}</flux:badge>
 					</div>
 					<div class="flex items-center gap-2">
 						<flux:button href="{{ route('tasks.edit', $task) }}" variant="ghost" icon="pencil" wire:navigate>
@@ -63,12 +86,16 @@
 					<div>
 						<flux:subheading>{{ __('Employee') }}</flux:subheading>
 						<flux:heading size="sm" class="mt-1">
-							{{ $task->employee->full_name }}
+							{{ $task->employee?->full_name ?? __('Unassigned') }}
 						</flux:heading>
 					</div>
 					<div>
 						<flux:subheading>{{ __('Status') }}</flux:subheading>
 						<flux:heading size="sm" class="mt-1">{{ $statusLabel }}</flux:heading>
+					</div>
+					<div>
+						<flux:subheading>{{ __('Priority') }}</flux:subheading>
+						<flux:heading size="sm" class="mt-1">{{ $priorityLabel }}</flux:heading>
 					</div>
 					<div>
 						<flux:subheading>{{ __('Due Date') }}</flux:subheading>

@@ -81,6 +81,7 @@ class TaskManagementTest extends TestCase
             'employee_id' => $employee->id,
             'title' => '  Prepare onboarding  ',
             'status' => Task::STATUSES[0],
+            'priority' => Task::PRIORITIES[2],
             'description' => '  Collect documents and schedule a walkthrough. ',
             'due_date' => '2026-02-10',
         ]);
@@ -92,8 +93,51 @@ class TaskManagementTest extends TestCase
             'employee_id' => $employee->id,
             'title' => 'Prepare onboarding',
             'status' => Task::STATUSES[0],
+            'priority' => Task::PRIORITIES[2],
             'description' => 'Collect documents and schedule a walkthrough.',
             'due_date' => Carbon::parse('2026-02-10')->startOfDay()->toDateTimeString(),
+        ]);
+    }
+
+    public function test_user_can_create_task_without_employee(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'employee_id' => null,
+            'title' => 'Plan quarterly review',
+            'status' => Task::STATUSES[0],
+            'priority' => Task::PRIORITIES[1],
+        ]);
+
+        $response->assertRedirect(route('tasks.index'));
+
+        $this->assertDatabaseHas('tasks', [
+            'user_id' => $user->id,
+            'employee_id' => null,
+            'title' => 'Plan quarterly review',
+        ]);
+    }
+
+    public function test_completed_tasks_force_priority_to_none_on_create(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'employee_id' => $employee->id,
+            'title' => 'Close out project',
+            'status' => 'completed',
+            'priority' => 'urgent',
+        ]);
+
+        $response->assertRedirect(route('tasks.index'));
+
+        $this->assertDatabaseHas('tasks', [
+            'user_id' => $user->id,
+            'employee_id' => $employee->id,
+            'status' => 'completed',
+            'priority' => 'none',
         ]);
     }
 
@@ -106,10 +150,11 @@ class TaskManagementTest extends TestCase
             'employee_id' => $otherEmployee->id,
             'title' => 'Ok title',
             'status' => 'invalid',
+            'priority' => 'invalid',
             'due_date' => 'not-a-date',
         ]);
 
-        $response->assertSessionHasErrors(['employee_id', 'status', 'due_date']);
+        $response->assertSessionHasErrors(['employee_id', 'status', 'priority', 'due_date']);
     }
 
     public function test_user_can_view_and_edit_their_task(): void
@@ -154,6 +199,7 @@ class TaskManagementTest extends TestCase
             'employee_id' => $employee->id,
             'title' => 'Finalize outline',
             'status' => Task::STATUSES[1],
+            'priority' => Task::PRIORITIES[0],
             'description' => 'Finalize sections A and B.',
             'due_date' => '2026-02-15',
         ]);
@@ -164,8 +210,55 @@ class TaskManagementTest extends TestCase
             'id' => $task->id,
             'title' => 'Finalize outline',
             'status' => Task::STATUSES[1],
+            'priority' => Task::PRIORITIES[0],
             'description' => 'Finalize sections A and B.',
             'due_date' => Carbon::parse('2026-02-15')->startOfDay()->toDateTimeString(),
+        ]);
+    }
+
+    public function test_user_can_remove_employee_from_task(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+        $task = Task::factory()->forEmployee($employee)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'employee_id' => null,
+            'title' => $task->title,
+            'status' => $task->status,
+            'priority' => $task->priority,
+        ]);
+
+        $response->assertRedirect(route('tasks.index'));
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'employee_id' => null,
+        ]);
+    }
+
+    public function test_completed_tasks_force_priority_to_none_on_update(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+        $task = Task::factory()->forEmployee($employee)->create([
+            'status' => 'pending',
+            'priority' => 'high',
+        ]);
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'employee_id' => $employee->id,
+            'title' => $task->title,
+            'status' => 'completed',
+            'priority' => 'urgent',
+        ]);
+
+        $response->assertRedirect(route('tasks.index'));
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'status' => 'completed',
+            'priority' => 'none',
         ]);
     }
 
@@ -180,6 +273,7 @@ class TaskManagementTest extends TestCase
                 'employee_id' => $otherEmployee->id,
                 'title' => 'Nope',
                 'status' => Task::STATUSES[0],
+                'priority' => Task::PRIORITIES[2],
             ])
             ->assertForbidden();
     }
