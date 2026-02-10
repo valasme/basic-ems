@@ -50,6 +50,7 @@ class ExampleTest extends TestCase
             'employee_id' => $employee->id,
             'title' => 'Prepare onboarding',
             'status' => 'pending',
+            'priority' => 'medium',
             'description' => 'Collect documents and schedule a walkthrough.',
             'due_date' => '2026-02-10',
         ]);
@@ -61,6 +62,7 @@ class ExampleTest extends TestCase
             'employee_id' => $employee->id,
             'title' => 'Prepare onboarding',
             'status' => 'pending',
+            'priority' => 'medium',
             'description' => 'Collect documents and schedule a walkthrough.',
             'due_date' => Carbon::parse('2026-02-10')->startOfDay()->toDateTimeString(),
         ]);

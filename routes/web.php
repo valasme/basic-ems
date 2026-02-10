@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DuePaymentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\TaskController;
@@ -18,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('employees', EmployeeController::class);
     Route::resource('tasks', TaskController::class);
     Route::resource('notes', NoteController::class);
+    Route::get('due-payments', [DuePaymentController::class, 'index'])->name('due-payments.index');
 });
 
 require __DIR__.'/settings.php';

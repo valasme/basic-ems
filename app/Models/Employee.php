@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -156,5 +157,97 @@ class Employee extends Model
     public function scopeOrderByName(Builder $query): Builder
     {
         return $query->orderBy('first_name')->orderBy('last_name');
+    }
+
+    /**
+     * Scope a query to employees with a pay day set.
+     *
+     * @param  Builder<Employee>  $query
+     * @return Builder<Employee>
+     */
+    public function scopeWithPayDay(Builder $query): Builder
+    {
+        return $query->whereNotNull('pay_day');
+    }
+
+    /**
+     * Get the next pay date based on the employee's pay_day.
+     */
+    public function getNextPayDateAttribute(): ?Carbon
+    {
+        if ($this->pay_day === null) {
+            return null;
+        }
+
+        $today = Carbon::today();
+        $payDay = min($this->pay_day, $today->daysInMonth);
+
+        $nextPayDate = $today->copy()->day($payDay);
+
+        if ($nextPayDate->lt($today)) {
+            $nextPayDate->addMonth();
+            $payDay = min($this->pay_day, $nextPayDate->daysInMonth);
+            $nextPayDate->day($payDay);
+        }
+
+        return $nextPayDate;
+    }
+
+    /**
+     * Get the number of days until the next pay date.
+     */
+    public function getDaysUntilPayAttribute(): ?int
+    {
+        $nextPayDate = $this->next_pay_date;
+
+        if ($nextPayDate === null) {
+            return null;
+        }
+
+        return (int) Carbon::today()->diffInDays($nextPayDate, false);
+    }
+
+    /**
+     * Get the urgency level based on days until pay.
+     */
+    public function getPayUrgencyAttribute(): string
+    {
+        $days = $this->days_until_pay;
+
+        if ($days === null) {
+            return 'none';
+        }
+
+        if ($days <= 0) {
+            return 'urgent';
+        }
+
+        if ($days <= 1) {
+            return 'urgent';
+        }
+
+        if ($days <= 3) {
+            return 'soon';
+        }
+
+        if ($days <= 7) {
+            return 'upcoming';
+        }
+
+        return 'scheduled';
+    }
+
+    /**
+     * Get the color for the current pay urgency level.
+     */
+    public function getPayUrgencyColorAttribute(): string
+    {
+        return match ($this->pay_urgency) {
+            'urgent' => 'red',
+            'soon' => 'orange',
+            'upcoming' => 'yellow',
+            'scheduled' => 'green',
+            default => 'zinc',
+        };
     }
 }

@@ -11,6 +11,7 @@ WARNING: This platform is intentionally scoped for really small businesses or pe
 - Employee directory with contact info, department, job title, and work times.
 - Task management with status, due date, and employee assignment.
 - Notes system with title and optional description.
+- Due payments tracking with upcoming pay dates and urgency cues.
 - Search across employees, tasks, and notes.
 - Authentication with Fortify, including optional two-factor settings.
 - Per-user ownership with policies to keep data scoped to the signed-in user.
@@ -82,13 +83,14 @@ This starts the Laravel server, queue listener, and Vite dev server together.
 php artisan db:seed
 ```
 
-This creates a test user (`test@example.com`) and seeds employees, tasks, and notes.
+This creates a test user (`test@example.com`) and seeds employees, tasks, notes, and due payments.
 
 ## Notes
 
 - Employee and task pages require a verified account.
 - Settings include profile, password, appearance, and two-factor options.
 - Task statuses: `pending`, `in_progress`, `completed`.
+- Due payment statuses: `pending`, `paid`.
 
 ## Tests
 

@@ -24,6 +24,9 @@
                     <flux:sidebar.item icon="document-text" :href="route('notes.index')" :current="request()->routeIs('notes.*')" wire:navigate>
                         {{ __('Notes') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="banknotes" :href="route('due-payments.index')" :current="request()->routeIs('due-payments.*')" wire:navigate>
+                        {{ __('Due Payments') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

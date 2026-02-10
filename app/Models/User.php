@@ -92,4 +92,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Note::class);
     }
+
+    /**
+     * Get the due payments owned by the user.
+     *
+     * @return HasMany<DuePayment, $this>
+     */
+    public function duePayments(): HasMany
+    {
+        return $this->hasMany(DuePayment::class);
+    }
 }
