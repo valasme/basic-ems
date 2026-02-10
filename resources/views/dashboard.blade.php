@@ -79,7 +79,7 @@
                                     <flux:table.cell>
                                         @if ($task->employee)
                                             <a href="{{ route('employees.show', $task->employee) }}" class="hover:underline" wire:navigate>
-                                                {{ $task->employee->full_name }}
+                                                {{ $task->employee?->full_name ?? __('Unassigned') }}
                                             </a>
                                         @else
                                             {{ __('Unassigned') }}
