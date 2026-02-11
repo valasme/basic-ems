@@ -18,6 +18,26 @@ class NoteManagementTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
+    public function test_guests_cannot_create_update_or_delete_notes(): void
+    {
+        $note = Note::factory()->forUser(User::factory()->create())->create();
+
+        $this->get(route('notes.create'))
+            ->assertRedirect(route('login'));
+
+        $this->post(route('notes.store'), [
+            'note_title' => 'Guest note',
+            'note_description' => 'Should not be created.',
+        ])->assertRedirect(route('login'));
+
+        $this->put(route('notes.update', $note), [
+            'note_title' => 'Guest update',
+        ])->assertRedirect(route('login'));
+
+        $this->delete(route('notes.destroy', $note))
+            ->assertRedirect(route('login'));
+    }
+
     public function test_index_lists_only_owned_notes_and_supports_search(): void
     {
         $user = User::factory()->create();
@@ -110,6 +130,41 @@ class NoteManagementTest extends TestCase
             'note_title' => 'Note without description',
             'note_description' => null,
         ]);
+    }
+
+    public function test_user_can_update_note_with_normalized_fields(): void
+    {
+        $user = User::factory()->create();
+        $note = Note::factory()->forUser($user)->create([
+            'note_title' => 'Draft notes',
+            'note_description' => 'Initial content',
+        ]);
+
+        $response = $this->actingAs($user)->put(route('notes.update', $note), [
+            'note_title' => '  Updated notes  ',
+            'note_description' => '  Revised content. ',
+        ]);
+
+        $response->assertRedirect(route('notes.index'));
+
+        $this->assertDatabaseHas('notes', [
+            'id' => $note->id,
+            'note_title' => 'Updated notes',
+            'note_description' => 'Revised content.',
+        ]);
+    }
+
+    public function test_update_validation_rejects_invalid_data(): void
+    {
+        $user = User::factory()->create();
+        $note = Note::factory()->forUser($user)->create();
+
+        $response = $this->actingAs($user)->put(route('notes.update', $note), [
+            'note_title' => 'ab',
+            'note_description' => str_repeat('a', 5001),
+        ]);
+
+        $response->assertSessionHasErrors(['note_title', 'note_description']);
     }
 
     public function test_user_can_view_and_edit_their_note(): void

@@ -48,15 +48,38 @@
             @endforeach
         </div>
 
+        @php
+            $taskSectionTitle = $isShowingFallbackTasks
+                ? __('Priority tasks')
+                : __('Urgent tasks');
+            $taskSectionSubtitle = $isShowingFallbackTasks
+                ? __('No urgent tasks. Showing high priority items first.')
+                : __('Top priority items that need attention.');
+            $priorityLabels = [
+                'urgent' => __('Urgent'),
+                'high' => __('High'),
+                'medium' => __('Medium'),
+                'low' => __('Low'),
+                'none' => __('None'),
+            ];
+            $priorityColors = [
+                'urgent' => 'red',
+                'high' => 'orange',
+                'medium' => 'sky',
+                'low' => 'zinc',
+                'none' => 'zinc',
+            ];
+        @endphp
+
         <div class="space-y-1">
-            <flux:heading size="lg">{{ __('Urgent tasks') }}</flux:heading>
-            <flux:subheading>{{ __('Top priority items that need attention.') }}</flux:subheading>
+            <flux:heading size="lg">{{ $taskSectionTitle }}</flux:heading>
+            <flux:subheading>{{ $taskSectionSubtitle }}</flux:subheading>
         </div>
 
         <div class="flex min-h-0 flex-1 flex-col">
             <flux:card class="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
-            @if ($urgentTasks->isEmpty())
-                <flux:subheading>{{ __('No urgent tasks yet.') }}</flux:subheading>
+            @if ($priorityTasks->isEmpty())
+                <flux:subheading>{{ __('No tasks yet.') }}</flux:subheading>
             @else
                 <div class="min-h-0 w-full flex-1 overflow-y-auto">
                     <flux:table>
@@ -69,7 +92,11 @@
                         </flux:table.columns>
 
                         <flux:table.rows>
-                            @foreach ($urgentTasks as $task)
+                            @foreach ($priorityTasks as $task)
+                                @php
+                                    $priorityLabel = $priorityLabels[$task->priority] ?? ucfirst($task->priority);
+                                    $priorityColor = $priorityColors[$task->priority] ?? 'zinc';
+                                @endphp
                                 <flux:table.row :key="$task->id">
                                     <flux:table.cell variant="strong">
                                         <a href="{{ route('tasks.show', $task) }}" class="hover:underline" wire:navigate>
@@ -86,7 +113,7 @@
                                         @endif
                                     </flux:table.cell>
                                     <flux:table.cell>
-                                        <flux:badge color="red">{{ __('Urgent') }}</flux:badge>
+                                        <flux:badge :color="$priorityColor">{{ $priorityLabel }}</flux:badge>
                                     </flux:table.cell>
                                     <flux:table.cell>
                                         {{ $task->due_date?->format('M d, Y') ?? __('No due date') }}

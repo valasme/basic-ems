@@ -111,15 +111,13 @@
                                         title="{{ __('Edit') }}"
                                         wire:navigate
                                     />
-                                    <flux:modal.trigger :name="'delete-employee-' . $employee->id">
+                                    <flux:modal.trigger :name="'delete-employee-'.$employee->id">
                                         <flux:button
                                             variant="ghost"
                                             size="sm"
                                             icon="trash"
                                             aria-label="{{ __('Delete :name', ['name' => $employee->full_name]) }}"
                                             title="{{ __('Delete') }}"
-                                            x-data=""
-                                            x-on:click.prevent="$dispatch('open-modal', 'delete-employee-{{ $employee->id }}')"
                                         />
                                     </flux:modal.trigger>
                                 </div>
@@ -131,15 +129,13 @@
 
             @foreach ($employees as $employee)
                 <flux:modal
-                    :name="'delete-employee-' . $employee->id"
-                    aria-labelledby="delete-employee-{{ $employee->id }}-title"
-                    aria-describedby="delete-employee-{{ $employee->id }}-desc"
+                    :name="'delete-employee-'.$employee->id"
                     class="md:w-96"
                 >
                     <div class="space-y-6">
                         <div>
-                            <flux:heading id="delete-employee-{{ $employee->id }}-title" size="lg">{{ __('Delete Employee') }}</flux:heading>
-                            <flux:subheading id="delete-employee-{{ $employee->id }}-desc" class="mt-2">
+                            <flux:heading size="lg">{{ __('Delete Employee') }}</flux:heading>
+                            <flux:subheading class="mt-2">
                                 {{ __('Are you sure you want to delete :name? This action cannot be undone.', ['name' => $employee->full_name]) }}
                             </flux:subheading>
                         </div>

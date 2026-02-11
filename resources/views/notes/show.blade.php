@@ -23,12 +23,7 @@
 							{{ __('Edit') }}
 						</flux:button>
 						<flux:modal.trigger name="delete-note">
-							<flux:button
-								variant="ghost"
-								icon="trash"
-								x-data=""
-								x-on:click.prevent="$dispatch('open-modal', 'delete-note')"
-							>
+						<flux:button variant="ghost" icon="trash">
 								{{ __('Delete') }}
 							</flux:button>
 						</flux:modal.trigger>

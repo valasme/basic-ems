@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('work_in', 5)->nullable();
             $table->string('work_out', 5)->nullable();
             $table->unsignedTinyInteger('pay_day')->nullable();
-            $table->decimal('pay_amount', 10, 2)->default(1500.00);
-            $table->decimal('pay_salary', 10, 2)->default(18000.00);
+            $table->decimal('pay_amount', 10, 2)->nullable();
+            $table->decimal('pay_salary', 10, 2)->nullable();
             $table->string('job_title')->nullable();
             $table->string('department')->nullable();
             $table->timestamps();

@@ -34,6 +34,30 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_login_requires_email_and_password(): void
+    {
+        $response = $this->post(route('login.store'), [
+            'email' => '',
+            'password' => '',
+        ]);
+
+        $response->assertSessionHasErrors(['email', 'password']);
+
+        $this->assertGuest();
+    }
+
+    public function test_login_rejects_invalid_email_format(): void
+    {
+        $response = $this->post(route('login.store'), [
+            'email' => 'not-an-email',
+            'password' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors(['email']);
+
+        $this->assertGuest();
+    }
+
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
         $user = User::factory()->create();

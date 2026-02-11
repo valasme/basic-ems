@@ -83,4 +83,51 @@ class TwoFactorAuthenticationTest extends TestCase
             'two_factor_recovery_codes' => null,
         ]);
     }
+
+    public function test_user_can_enable_two_factor_authentication(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->withSession(['auth.password_confirmed_at' => time()]);
+
+        $component = Livewire::test('settings.two-factor')
+            ->call('enable');
+
+        $component->assertSet('showModal', true);
+        $component->assertSet('requiresConfirmation', true);
+
+        $this->assertNotEmpty($component->get('qrCodeSvg'));
+        $this->assertNotEmpty($component->get('manualSetupKey'));
+    }
+
+    public function test_user_can_disable_two_factor_authentication(): void
+    {
+        $user = User::factory()->withTwoFactor()->create();
+
+        $this->actingAs($user)
+            ->withSession(['auth.password_confirmed_at' => time()]);
+
+        $component = Livewire::test('settings.two-factor');
+
+        $component->assertSet('twoFactorEnabled', true);
+
+        $component->call('disable')
+            ->assertSet('twoFactorEnabled', false);
+    }
+
+    public function test_two_factor_confirmation_requires_valid_code(): void
+    {
+        $user = User::factory()->withTwoFactor()->create();
+
+        $this->actingAs($user)
+            ->withSession(['auth.password_confirmed_at' => time()]);
+
+        $component = Livewire::test('settings.two-factor')
+            ->set('showVerificationStep', true)
+            ->set('code', '12345')
+            ->call('confirmTwoFactor');
+
+        $component->assertHasErrors(['code']);
+    }
 }

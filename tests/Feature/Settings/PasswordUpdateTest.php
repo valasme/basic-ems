@@ -48,4 +48,21 @@ class PasswordUpdateTest extends TestCase
 
         $response->assertHasErrors(['current_password']);
     }
+
+    public function test_password_update_requires_confirmation_and_strength(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('password'),
+        ]);
+
+        $this->actingAs($user);
+
+        $response = Livewire::test(Password::class)
+            ->set('current_password', 'password')
+            ->set('password', 'short')
+            ->set('password_confirmation', 'mismatch')
+            ->call('updatePassword');
+
+        $response->assertHasErrors(['password']);
+    }
 }

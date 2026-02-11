@@ -184,4 +184,54 @@ class DuePaymentManagementTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_days_until_pay_handles_pay_day_beyond_month_length(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 2, 10));
+
+        $user = User::factory()->create();
+
+        $endOfMonthEmployee = Employee::factory()->forUser($user)->create([
+            'pay_day' => 31,
+            'pay_amount' => 1000.00,
+        ]);
+
+        $this->assertEquals(18, $endOfMonthEmployee->days_until_pay);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_pay_urgency_color_matches_expected_levels(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 2, 10));
+
+        $user = User::factory()->create();
+
+        $urgent = Employee::factory()->forUser($user)->create([
+            'pay_day' => 10,
+            'pay_amount' => 1000.00,
+        ]);
+
+        $soon = Employee::factory()->forUser($user)->create([
+            'pay_day' => 12,
+            'pay_amount' => 1000.00,
+        ]);
+
+        $upcoming = Employee::factory()->forUser($user)->create([
+            'pay_day' => 15,
+            'pay_amount' => 1000.00,
+        ]);
+
+        $scheduled = Employee::factory()->forUser($user)->create([
+            'pay_day' => 25,
+            'pay_amount' => 1000.00,
+        ]);
+
+        $this->assertEquals('red', $urgent->pay_urgency_color);
+        $this->assertEquals('orange', $soon->pay_urgency_color);
+        $this->assertEquals('yellow', $upcoming->pay_urgency_color);
+        $this->assertEquals('green', $scheduled->pay_urgency_color);
+
+        Carbon::setTestNow();
+    }
 }

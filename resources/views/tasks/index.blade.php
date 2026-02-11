@@ -161,17 +161,15 @@
 										title="{{ __('Edit') }}"
 										wire:navigate
 									/>
-									<flux:modal.trigger :name="'delete-task-' . $task->id">
-										<flux:button
-											variant="ghost"
-											size="sm"
-											icon="trash"
-											aria-label="{{ __('Delete :title', ['title' => $task->title]) }}"
-											title="{{ __('Delete') }}"
-											x-data=""
-											x-on:click.prevent="$dispatch('open-modal', 'delete-task-{{ $task->id }}')"
-										/>
-									</flux:modal.trigger>
+								<flux:modal.trigger :name="'delete-task-'.$task->id">
+									<flux:button
+										variant="ghost"
+										size="sm"
+										icon="trash"
+										aria-label="{{ __('Delete :title', ['title' => $task->title]) }}"
+										title="{{ __('Delete') }}"
+									/>
+								</flux:modal.trigger>
 								</div>
 							</flux:table.cell>
 						</flux:table.row>
@@ -181,15 +179,13 @@
 
 			@foreach ($tasks as $task)
 				<flux:modal
-					:name="'delete-task-' . $task->id"
-					aria-labelledby="delete-task-{{ $task->id }}-title"
-					aria-describedby="delete-task-{{ $task->id }}-desc"
+					:name="'delete-task-'.$task->id"
 					class="md:w-96"
 				>
 					<div class="space-y-6">
 						<div>
-							<flux:heading id="delete-task-{{ $task->id }}-title" size="lg">{{ __('Delete Task') }}</flux:heading>
-							<flux:subheading id="delete-task-{{ $task->id }}-desc" class="mt-2">
+							<flux:heading size="lg">{{ __('Delete Task') }}</flux:heading>
+							<flux:subheading class="mt-2">
 								{{ __('Are you sure you want to delete :title? This action cannot be undone.', ['title' => $task->title]) }}
 							</flux:subheading>
 						</div>

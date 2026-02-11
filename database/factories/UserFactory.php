@@ -51,9 +51,21 @@ class UserFactory extends Factory
     public function withTwoFactor(): static
     {
         return $this->state(fn (array $attributes): array => [
-            'two_factor_secret' => encrypt('secret'),
+            'two_factor_secret' => encrypt($this->generateBase32Secret()),
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
         ]);
+    }
+
+    /**
+     * Generate a random base32 secret for tests.
+     */
+    private function generateBase32Secret(): string
+    {
+        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+        return collect(range(1, 32))
+            ->map(fn (): string => $alphabet[random_int(0, 31)])
+            ->implode('');
     }
 }

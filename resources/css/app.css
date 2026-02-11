@@ -60,6 +60,10 @@
     [aria-disabled="true"] {
         @apply cursor-not-allowed;
     }
+
+    ui-modal {
+        display: contents;
+    }
 }
 
 [data-flux-field]:not(ui-radio, ui-checkbox) {

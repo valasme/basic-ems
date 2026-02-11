@@ -32,4 +32,18 @@ class DevelopmentSeedersTest extends TestCase
             $this->assertSame(25, $user->tasks()->count());
         });
     }
+
+    public function test_seeders_do_not_exceed_the_user_limit(): void
+    {
+        User::factory()->count(7)->create();
+
+        $this->seed(EmployeeSeeder::class);
+        $this->seed(TaskSeeder::class);
+
+        $sixthUser = User::query()->orderBy('id')->skip(5)->first();
+
+        $this->assertNotNull($sixthUser);
+        $this->assertSame(0, $sixthUser->employees()->count());
+        $this->assertSame(0, $sixthUser->tasks()->count());
+    }
 }

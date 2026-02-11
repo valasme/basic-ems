@@ -20,6 +20,32 @@ class TaskManagementTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
+    public function test_guests_cannot_create_update_or_delete_tasks(): void
+    {
+        $employee = Employee::factory()->forUser(User::factory()->create())->create();
+        $task = Task::factory()->forEmployee($employee)->create();
+
+        $this->get(route('tasks.create'))
+            ->assertRedirect(route('login'));
+
+        $this->post(route('tasks.store'), [
+            'employee_id' => $employee->id,
+            'title' => 'Guest task',
+            'status' => Task::STATUSES[0],
+            'priority' => Task::PRIORITIES[1],
+        ])->assertRedirect(route('login'));
+
+        $this->put(route('tasks.update', $task), [
+            'employee_id' => $employee->id,
+            'title' => 'Guest update',
+            'status' => Task::STATUSES[0],
+            'priority' => Task::PRIORITIES[1],
+        ])->assertRedirect(route('login'));
+
+        $this->delete(route('tasks.destroy', $task))
+            ->assertRedirect(route('login'));
+    }
+
     public function test_index_lists_only_owned_tasks_and_supports_search(): void
     {
         $user = User::factory()->create();
@@ -157,6 +183,22 @@ class TaskManagementTest extends TestCase
         $response->assertSessionHasErrors(['employee_id', 'status', 'priority', 'due_date']);
     }
 
+    public function test_store_validation_rejects_short_title_and_long_description(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'employee_id' => null,
+            'title' => 'No',
+            'status' => Task::STATUSES[0],
+            'priority' => Task::PRIORITIES[1],
+            'description' => str_repeat('a', 2001),
+            'due_date' => '2026-13-40',
+        ]);
+
+        $response->assertSessionHasErrors(['title', 'description', 'due_date']);
+    }
+
     public function test_user_can_view_and_edit_their_task(): void
     {
         $user = User::factory()->create();
@@ -259,6 +301,32 @@ class TaskManagementTest extends TestCase
             'id' => $task->id,
             'status' => 'completed',
             'priority' => 'none',
+        ]);
+    }
+
+    public function test_update_validation_rejects_unowned_employee_and_invalid_inputs(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+        $task = Task::factory()->forEmployee($employee)->create();
+        $otherEmployee = Employee::factory()->forUser(User::factory()->create())->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'employee_id' => $otherEmployee->id,
+            'title' => 'No',
+            'status' => 'invalid',
+            'priority' => 'invalid',
+            'description' => str_repeat('b', 2001),
+            'due_date' => 'not-a-date',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'employee_id',
+            'title',
+            'status',
+            'priority',
+            'description',
+            'due_date',
         ]);
     }
 

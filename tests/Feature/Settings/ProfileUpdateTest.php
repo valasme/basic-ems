@@ -39,6 +39,35 @@ class ProfileUpdateTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
+    public function test_profile_information_requires_valid_name_and_email(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $response = Livewire::test(Profile::class)
+            ->set('name', '')
+            ->set('email', 'not-an-email')
+            ->call('updateProfileInformation');
+
+        $response->assertHasErrors(['name', 'email']);
+    }
+
+    public function test_profile_information_requires_unique_email(): void
+    {
+        $existing = User::factory()->create(['email' => 'existing@example.com']);
+        $user = User::factory()->create(['email' => 'current@example.com']);
+
+        $this->actingAs($user);
+
+        $response = Livewire::test(Profile::class)
+            ->set('name', $user->name)
+            ->set('email', $existing->email)
+            ->call('updateProfileInformation');
+
+        $response->assertHasErrors(['email']);
+    }
+
     public function test_email_verification_status_is_unchanged_when_email_address_is_unchanged(): void
     {
         $user = User::factory()->create();

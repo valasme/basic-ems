@@ -25,9 +25,18 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post(route('password.request'), ['email' => $user->email]);
+        $this->post(route('password.email'), ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_reset_password_link_is_not_sent_for_unknown_email(): void
+    {
+        Notification::fake();
+
+        $this->post(route('password.email'), ['email' => 'missing@example.com']);
+
+        Notification::assertNothingSent();
     }
 
     public function test_reset_password_screen_can_be_rendered(): void
@@ -36,7 +45,7 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post(route('password.request'), ['email' => $user->email]);
+        $this->post(route('password.email'), ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
             $response = $this->get(route('password.reset', $notification->token));
@@ -52,7 +61,7 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->post(route('password.request'), ['email' => $user->email]);
+        $this->post(route('password.email'), ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
             $response = $this->post(route('password.update'), [
@@ -65,6 +74,30 @@ class PasswordResetTest extends TestCase
             $response
                 ->assertSessionHasNoErrors()
                 ->assertRedirect(route('login', absolute: false));
+
+            return true;
+        });
+    }
+
+    public function test_password_reset_rejects_invalid_token(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'password' => 'password',
+        ]);
+
+        $this->post(route('password.email'), ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user): bool {
+            $response = $this->post(route('password.update'), [
+                'token' => 'invalid-token',
+                'email' => $user->email,
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+
+            $response->assertSessionHasErrors(['email']);
 
             return true;
         });

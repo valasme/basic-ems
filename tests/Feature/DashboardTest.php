@@ -7,6 +7,7 @@ use App\Models\Note;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -25,6 +26,15 @@ class DashboardTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->get(route('dashboard'));
+        $response->assertOk();
+    }
+
+    public function test_unverified_users_can_visit_the_dashboard_without_must_verify_email(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
         $response->assertOk();
     }
 
@@ -51,18 +61,17 @@ class DashboardTest extends TestCase
         $response->assertViewHas('notesCount', 5);
     }
 
-    public function test_dashboard_only_shows_urgent_tasks_for_the_authenticated_user(): void
+    public function test_dashboard_shows_urgent_tasks_first_and_limits_to_seven(): void
     {
         $user = User::factory()->create();
         $employee = Employee::factory()->forUser($user)->create();
-        $urgentTask = Task::factory()->forEmployee($employee)->create([
-            'title' => 'Urgent payroll review',
-            'priority' => 'urgent',
-        ]);
-        $unassignedUrgentTask = Task::factory()->forUser($user)->create([
-            'title' => 'Unassigned urgent task',
-            'priority' => 'urgent',
-        ]);
+        $urgentTasks = collect(range(1, 8))->map(function (int $index) use ($employee): Task {
+            return Task::factory()->forEmployee($employee)->create([
+                'title' => "Urgent task {$index}",
+                'priority' => 'urgent',
+                'due_date' => Carbon::now()->addDays($index),
+            ]);
+        });
         $nonUrgentTask = Task::factory()->forEmployee($employee)->create([
             'title' => 'Medium priority filing',
             'priority' => 'medium',
@@ -78,16 +87,54 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertOk();
-        $response->assertSee($urgentTask->title);
-        $response->assertSee($unassignedUrgentTask->title);
-        $response->assertSee(__('Unassigned'));
+        $response->assertSee($urgentTasks->first()->title);
         $response->assertDontSee($nonUrgentTask->title);
         $response->assertDontSee($otherUrgentTask->title);
-        $response->assertViewHas('urgentTasks', function ($urgentTasks) use ($urgentTask, $unassignedUrgentTask, $otherUrgentTask): bool {
-            return $urgentTasks->contains('id', $urgentTask->id)
-                && $urgentTasks->contains('id', $unassignedUrgentTask->id)
-                && ! $urgentTasks->contains('id', $otherUrgentTask->id)
-                && $urgentTasks->every(fn (Task $task): bool => $task->priority === 'urgent');
+        $response->assertDontSee($urgentTasks->last()->title);
+        $response->assertViewHas('isShowingFallbackTasks', false);
+        $response->assertViewHas('priorityTasks', function ($priorityTasks) use ($otherUrgentTask): bool {
+            return $priorityTasks->count() === 7
+                && ! $priorityTasks->contains('id', $otherUrgentTask->id)
+                && $priorityTasks->every(fn (Task $task): bool => $task->priority === 'urgent');
         });
+    }
+
+    public function test_dashboard_shows_high_and_other_tasks_when_no_urgent_tasks_exist(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+
+        $priorityTasks = collect([
+            ['title' => 'High priority payroll', 'priority' => 'high', 'due_date' => Carbon::now()->addDay()],
+            ['title' => 'High priority onboarding', 'priority' => 'high', 'due_date' => Carbon::now()->addDays(2)],
+            ['title' => 'Medium priority review', 'priority' => 'medium', 'due_date' => Carbon::now()->addDays(3)],
+            ['title' => 'Low priority filing', 'priority' => 'low', 'due_date' => Carbon::now()->addDays(4)],
+            ['title' => 'No priority cleanup', 'priority' => 'none', 'due_date' => Carbon::now()->addDays(5)],
+            ['title' => 'Medium priority audit', 'priority' => 'medium', 'due_date' => Carbon::now()->addDays(6)],
+            ['title' => 'Low priority reminder', 'priority' => 'low', 'due_date' => Carbon::now()->addDays(7)],
+            ['title' => 'No priority archive', 'priority' => 'none', 'due_date' => Carbon::now()->addDays(8)],
+        ])->map(function (array $task) use ($employee): Task {
+            return Task::factory()->forEmployee($employee)->create($task);
+        });
+
+        $otherUser = User::factory()->create();
+        $otherEmployee = Employee::factory()->forUser($otherUser)->create();
+        $otherUrgentTask = Task::factory()->forEmployee($otherEmployee)->create([
+            'title' => 'Other urgent task',
+            'priority' => 'urgent',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee($priorityTasks->first()->title);
+        $response->assertDontSee($otherUrgentTask->title);
+        $response->assertDontSee($priorityTasks->last()->title);
+        $response->assertViewHas('priorityTasks', function ($priorityTasksView) use ($otherUrgentTask): bool {
+            return $priorityTasksView->count() === 7
+                && ! $priorityTasksView->contains('id', $otherUrgentTask->id)
+                && $priorityTasksView->every(fn (Task $task): bool => $task->priority !== 'urgent');
+        });
+        $response->assertViewHas('isShowingFallbackTasks', true);
     }
 }

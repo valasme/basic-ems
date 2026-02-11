@@ -111,17 +111,15 @@
 										title="{{ __('Edit') }}"
 										wire:navigate
 									/>
-									<flux:modal.trigger :name="'delete-note-' . $note->id">
-										<flux:button
-											variant="ghost"
-											size="sm"
-											icon="trash"
-											aria-label="{{ __('Delete :title', ['title' => $note->note_title]) }}"
-											title="{{ __('Delete') }}"
-											x-data=""
-											x-on:click.prevent="$dispatch('open-modal', 'delete-note-{{ $note->id }}')"
-										/>
-									</flux:modal.trigger>
+								<flux:modal.trigger :name="'delete-note-'.$note->id">
+									<flux:button
+										variant="ghost"
+										size="sm"
+										icon="trash"
+										aria-label="{{ __('Delete :title', ['title' => $note->note_title]) }}"
+										title="{{ __('Delete') }}"
+									/>
+								</flux:modal.trigger>
 								</div>
 							</flux:table.cell>
 						</flux:table.row>
@@ -131,15 +129,13 @@
 
 			@foreach ($notes as $note)
 				<flux:modal
-					:name="'delete-note-' . $note->id"
-					aria-labelledby="delete-note-{{ $note->id }}-title"
-					aria-describedby="delete-note-{{ $note->id }}-desc"
+					:name="'delete-note-'.$note->id"
 					class="md:w-96"
 				>
 					<div class="space-y-6">
 						<div>
-							<flux:heading id="delete-note-{{ $note->id }}-title" size="lg">{{ __('Delete Note') }}</flux:heading>
-							<flux:subheading id="delete-note-{{ $note->id }}-desc" class="mt-2">
+							<flux:heading size="lg">{{ __('Delete Note') }}</flux:heading>
+							<flux:subheading class="mt-2">
 								{{ __('Are you sure you want to delete :title? This action cannot be undone.', ['title' => $note->note_title]) }}
 							</flux:subheading>
 						</div>

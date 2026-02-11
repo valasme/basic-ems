@@ -18,6 +18,29 @@ class EmployeeManagementTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
+    public function test_guests_cannot_create_update_or_delete_employees(): void
+    {
+        $employee = Employee::factory()->forUser(User::factory()->create())->create();
+
+        $this->get(route('employees.create'))
+            ->assertRedirect(route('login'));
+
+        $this->post(route('employees.store'), [
+            'first_name' => 'Ava',
+            'last_name' => 'Stone',
+            'email' => 'ava@example.com',
+        ])->assertRedirect(route('login'));
+
+        $this->put(route('employees.update', $employee), [
+            'first_name' => 'Nope',
+            'last_name' => 'Nope',
+            'email' => 'nope@example.com',
+        ])->assertRedirect(route('login'));
+
+        $this->delete(route('employees.destroy', $employee))
+            ->assertRedirect(route('login'));
+    }
+
     public function test_index_lists_only_owned_employees_and_supports_search(): void
     {
         $user = User::factory()->create();
@@ -69,6 +92,15 @@ class EmployeeManagementTest extends TestCase
         });
     }
 
+    public function test_create_page_can_be_rendered_for_authenticated_user(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('employees.create'));
+
+        $response->assertOk();
+    }
+
     public function test_user_can_create_employee_with_normalized_fields(): void
     {
         $user = User::factory()->create();
@@ -104,6 +136,28 @@ class EmployeeManagementTest extends TestCase
         ]);
     }
 
+    public function test_user_can_create_employee_with_minimal_fields(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('employees.store'), [
+            'first_name' => 'Dimitris',
+            'last_name' => 'Valasellis',
+            'email' => 'valasellis@example.com',
+        ]);
+
+        $response->assertRedirect(route('employees.index'));
+
+        $this->assertDatabaseHas('employees', [
+            'user_id' => $user->id,
+            'first_name' => 'Dimitris',
+            'last_name' => 'Valasellis',
+            'email' => 'valasellis@example.com',
+            'pay_amount' => null,
+            'pay_salary' => null,
+        ]);
+    }
+
     public function test_store_validation_requires_fields_and_unique_email(): void
     {
         $user = User::factory()->create();
@@ -118,6 +172,23 @@ class EmployeeManagementTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors(['first_name', 'last_name', 'email', 'work_in', 'work_out']);
+    }
+
+    public function test_store_validation_rejects_invalid_pay_fields(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('employees.store'), [
+            'first_name' => 'Taylor',
+            'last_name' => 'Morgan',
+            'email' => 'taylor@example.com',
+            'work_in' => '9am',
+            'work_out' => '5pm',
+            'pay_day' => 0,
+            'pay_amount' => -10,
+        ]);
+
+        $response->assertSessionHasErrors(['work_in', 'work_out', 'pay_day', 'pay_amount']);
     }
 
     public function test_user_can_view_and_edit_their_employee(): void
@@ -178,6 +249,54 @@ class EmployeeManagementTest extends TestCase
             'pay_amount' => '1900.00',
             'pay_salary' => '22800.00',
         ]);
+    }
+
+    public function test_user_can_update_employee_with_normalized_fields(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->withEmail('before@example.com')->create();
+
+        $response = $this->actingAs($user)->put(route('employees.update', $employee), [
+            'first_name' => '  Jamie ',
+            'last_name' => '  Ray ',
+            'email' => ' JAMIE.RAY@EXAMPLE.com ',
+            'phone_number' => ' 555 777 3333 ',
+            'work_in' => '08:00',
+            'work_out' => '16:00',
+            'job_title' => '  Manager ',
+            'department' => '  People Ops ',
+        ]);
+
+        $response->assertRedirect(route('employees.index'));
+
+        $this->assertDatabaseHas('employees', [
+            'id' => $employee->id,
+            'first_name' => 'Jamie',
+            'last_name' => 'Ray',
+            'email' => 'jamie.ray@example.com',
+            'phone_number' => '555 777 3333',
+            'job_title' => 'Manager',
+            'department' => 'People Ops',
+        ]);
+    }
+
+    public function test_update_validation_rejects_duplicate_email_and_invalid_inputs(): void
+    {
+        $user = User::factory()->create();
+        $existing = Employee::factory()->forUser($user)->withEmail('taken@example.com')->create();
+        $employee = Employee::factory()->forUser($user)->withEmail('current@example.com')->create();
+
+        $response = $this->actingAs($user)->put(route('employees.update', $employee), [
+            'first_name' => 'Jo',
+            'last_name' => 'Da',
+            'email' => $existing->email,
+            'work_in' => '9am',
+            'work_out' => '5pm',
+            'pay_day' => 32,
+            'pay_amount' => -1,
+        ]);
+
+        $response->assertSessionHasErrors(['email', 'work_in', 'work_out', 'pay_day', 'pay_amount']);
     }
 
     public function test_user_cannot_update_other_users_employee(): void
