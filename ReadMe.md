@@ -116,7 +116,7 @@ Seeding creates a test user (test@example.com) and sample employees, attendance 
 
 ## Authentication and Access
 
-- Employee and task pages require a verified account.
+- Dashboard needs you to be logged in. Will not let you access.
 - Settings include profile, password, appearance, and two-factor options.
 
 ## Status Values
