@@ -9,6 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class NoteController extends Controller
 {
@@ -53,9 +54,17 @@ class NoteController extends Controller
      */
     public function store(StoreNoteRequest $request): RedirectResponse
     {
-        $request->user()
-            ->notes()
-            ->create($request->validated());
+        try {
+            $request->user()
+                ->notes()
+                ->create($request->validated());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Unable to create note right now. Please try again.');
+        }
 
         return redirect()
             ->route('notes.index')
@@ -91,7 +100,15 @@ class NoteController extends Controller
      */
     public function update(UpdateNoteRequest $request, Note $note): RedirectResponse
     {
-        $note->update($request->validated());
+        try {
+            $note->update($request->validated());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Unable to update note right now. Please try again.');
+        }
 
         return redirect()
             ->route('notes.index')
@@ -105,7 +122,15 @@ class NoteController extends Controller
     {
         $this->authorize('delete', $note);
 
-        $note->delete();
+        try {
+            $note->delete();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('notes.index')
+                ->with('error', 'Unable to delete note right now. Please try again.');
+        }
 
         return redirect()
             ->route('notes.index')

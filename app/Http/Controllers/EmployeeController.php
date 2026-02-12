@@ -9,6 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 class EmployeeController extends Controller
 {
@@ -51,7 +52,15 @@ class EmployeeController extends Controller
      */
     public function store(StoreEmployeeRequest $request): RedirectResponse
     {
-        $request->user()->employees()->create($request->validated());
+        try {
+            $request->user()->employees()->create($request->validated());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Unable to create employee right now. Please try again.');
+        }
 
         return redirect()
             ->route('employees.index')
@@ -83,7 +92,15 @@ class EmployeeController extends Controller
      */
     public function update(UpdateEmployeeRequest $request, Employee $employee): RedirectResponse
     {
-        $employee->update($request->validated());
+        try {
+            $employee->update($request->validated());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Unable to update employee right now. Please try again.');
+        }
 
         return redirect()
             ->route('employees.index')
@@ -97,7 +114,15 @@ class EmployeeController extends Controller
     {
         $this->authorize('delete', $employee);
 
-        $employee->delete();
+        try {
+            $employee->delete();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('employees.index')
+                ->with('error', 'Unable to delete employee right now. Please try again.');
+        }
 
         return redirect()
             ->route('employees.index')

@@ -11,6 +11,13 @@
             <flux:heading size="xl">{{ __('Add Employee') }}</flux:heading>
         </div>
 
+        @if (session('error'))
+            <flux:callout variant="danger" role="alert" aria-live="assertive">
+                <flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
+                <flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
+            </flux:callout>
+        @endif
+
         <flux:card class="flex-1">
             <form method="POST" action="{{ route('employees.store') }}" class="flex h-full flex-col gap-6">
                 @csrf

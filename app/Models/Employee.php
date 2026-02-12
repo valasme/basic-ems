@@ -30,6 +30,7 @@ use Illuminate\Support\Str;
  * @property-read string $full_name
  * @property-read User $user
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Task> $tasks
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Attendance> $attendances
  */
 class Employee extends Model
 {
@@ -73,6 +74,16 @@ class Employee extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Get the attendance entries for the employee.
+     *
+     * @return HasMany<Attendance, $this>
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
     }
 
     /**

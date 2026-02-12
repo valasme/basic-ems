@@ -132,6 +132,18 @@ class NoteManagementTest extends TestCase
         ]);
     }
 
+    public function test_create_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to create note right now. Please try again.'])
+            ->get(route('notes.create'));
+
+        $response->assertOk();
+        $response->assertSee('Unable to create note right now. Please try again.');
+    }
+
     public function test_user_can_update_note_with_normalized_fields(): void
     {
         $user = User::factory()->create();
@@ -178,6 +190,32 @@ class NoteManagementTest extends TestCase
 
         $editResponse = $this->actingAs($user)->get(route('notes.edit', $note));
         $editResponse->assertOk();
+    }
+
+    public function test_show_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+        $note = Note::factory()->forUser($user)->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to view note right now. Please try again.'])
+            ->get(route('notes.show', $note));
+
+        $response->assertOk();
+        $response->assertSee('Unable to view note right now. Please try again.');
+    }
+
+    public function test_edit_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+        $note = Note::factory()->forUser($user)->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to update note right now. Please try again.'])
+            ->get(route('notes.edit', $note));
+
+        $response->assertOk();
+        $response->assertSee('Unable to update note right now. Please try again.');
     }
 
     public function test_user_cannot_view_or_edit_other_users_note(): void
@@ -237,6 +275,18 @@ class NoteManagementTest extends TestCase
         $response->assertRedirect(route('notes.index'));
 
         $this->assertDatabaseMissing('notes', ['id' => $note->id]);
+    }
+
+    public function test_index_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to delete note right now. Please try again.'])
+            ->get(route('notes.index'));
+
+        $response->assertOk();
+        $response->assertSee('Unable to delete note right now. Please try again.');
     }
 
     public function test_user_cannot_delete_other_users_note(): void

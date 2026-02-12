@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -136,5 +137,21 @@ class DashboardTest extends TestCase
                 && $priorityTasksView->every(fn (Task $task): bool => $task->priority !== 'urgent');
         });
         $response->assertViewHas('isShowingFallbackTasks', true);
+    }
+
+    public function test_dashboard_handles_data_loading_errors_gracefully(): void
+    {
+        $user = User::factory()->create();
+
+        Schema::drop('tasks');
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertViewHas('dashboardLoadError', true);
+        $response->assertViewHas('employeesCount', 0);
+        $response->assertViewHas('tasksCount', 0);
+        $response->assertViewHas('notesCount', 0);
+        $response->assertSee(__('Dashboard metrics are temporarily unavailable.'));
     }
 }

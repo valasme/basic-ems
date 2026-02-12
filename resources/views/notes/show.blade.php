@@ -11,6 +11,13 @@
 			<flux:heading size="xl">{{ $note->note_title }}</flux:heading>
 		</div>
 
+		@if (session('error'))
+			<flux:callout variant="danger" role="alert" aria-live="assertive">
+				<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
+				<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
+			</flux:callout>
+		@endif
+
 		<flux:card class="flex-1">
 			<div class="space-y-6">
 				<div class="flex items-start justify-between gap-4">

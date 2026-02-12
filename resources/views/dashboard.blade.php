@@ -55,6 +55,12 @@
             $taskSectionSubtitle = $isShowingFallbackTasks
                 ? __('No urgent tasks. Showing high priority items first.')
                 : __('Top priority items that need attention.');
+
+            if ($dashboardLoadError ?? false) {
+                $taskSectionTitle = __('Tasks unavailable');
+                $taskSectionSubtitle = __('There was a problem loading dashboard data. Please refresh and try again.');
+            }
+
             $priorityLabels = [
                 'urgent' => __('Urgent'),
                 'high' => __('High'),
@@ -75,6 +81,12 @@
             <flux:heading size="lg">{{ $taskSectionTitle }}</flux:heading>
             <flux:subheading>{{ $taskSectionSubtitle }}</flux:subheading>
         </div>
+
+        @if ($dashboardLoadError ?? false)
+            <flux:card>
+                <flux:subheading>{{ __('Dashboard metrics are temporarily unavailable.') }}</flux:subheading>
+            </flux:card>
+        @endif
 
         <div class="flex min-h-0 flex-1 flex-col">
             <flux:card class="flex min-h-0 w-full flex-1 flex-col overflow-hidden">

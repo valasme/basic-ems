@@ -19,6 +19,32 @@ class DuePaymentManagementTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
+    public function test_due_payments_are_read_only_without_create_show_or_edit_routes(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/due-payments/create')->assertNotFound();
+        $this->actingAs($user)->get('/due-payments/1')->assertNotFound();
+        $this->actingAs($user)->get('/due-payments/1/edit')->assertNotFound();
+    }
+
+    public function test_due_payments_reject_post_put_and_delete_operations(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/due-payments', [])
+            ->assertStatus(405);
+
+        $this->actingAs($user)
+            ->put('/due-payments/1', [])
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->delete('/due-payments/1')
+            ->assertNotFound();
+    }
+
     public function test_index_lists_only_owned_employees_with_pay_day(): void
     {
         $user = User::factory()->create();
@@ -78,6 +104,18 @@ class DuePaymentManagementTest extends TestCase
         $searchByFullName = $this->actingAs($user)->get(route('due-payments.index', ['search' => 'Maria Lopez']));
         $searchByFullName->assertOk();
         $searchByFullName->assertSee($maria->full_name);
+    }
+
+    public function test_due_payments_index_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to load due payments right now. Please try again.'])
+            ->get(route('due-payments.index'));
+
+        $response->assertOk();
+        $response->assertSee('Unable to load due payments right now. Please try again.');
     }
 
     public function test_index_orders_employees_by_soonest_pay_date_first(): void

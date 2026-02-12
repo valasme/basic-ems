@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Throwable;
 
 class DashboardController extends Controller
 {
@@ -15,44 +18,76 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        if (! $user) {
-            abort(403);
+        try {
+            $user->loadCount(['employees', 'tasks', 'notes']);
+
+            [$priorityTasks, $isShowingFallbackTasks] = $this->resolvePriorityTasks($user->id);
+
+            return view('dashboard', [
+                'employeesCount' => $user->employees_count,
+                'tasksCount' => $user->tasks_count,
+                'notesCount' => $user->notes_count,
+                'priorityTasks' => $priorityTasks,
+                'isShowingFallbackTasks' => $isShowingFallbackTasks,
+                'dashboardLoadError' => false,
+            ]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return view('dashboard', [
+                'employeesCount' => 0,
+                'tasksCount' => 0,
+                'notesCount' => 0,
+                'priorityTasks' => collect(),
+                'isShowingFallbackTasks' => false,
+                'dashboardLoadError' => true,
+            ]);
         }
+    }
 
-        $user->loadCount(['employees', 'tasks', 'notes']);
-
-        $taskQuery = Task::query()
+    /**
+     * Build the base query used by dashboard priority task sections.
+     *
+     * @return Builder<Task>
+     */
+    private function dashboardTaskQuery(int $userId): Builder
+    {
+        return Task::query()
             ->select(['id', 'user_id', 'employee_id', 'title', 'priority', 'due_date', 'created_at'])
-            ->ownedBy($user)
+            ->where('user_id', $userId)
             ->with('employee:id,first_name,last_name');
+    }
+
+    /**
+     * Resolve priority tasks and whether fallback mode is active.
+     *
+     * @return array{Collection<int, Task>, bool}
+     */
+    private function resolvePriorityTasks(int $userId): array
+    {
+        $taskQuery = $this->dashboardTaskQuery($userId);
 
         $urgentTasks = (clone $taskQuery)
             ->urgent()
+            ->orderByRaw('due_date is null')
             ->orderBy('due_date')
             ->orderByDesc('created_at')
             ->limit(7)
             ->get();
 
-        $isShowingFallbackTasks = false;
-        $priorityTasks = $urgentTasks;
-
-        if ($urgentTasks->isEmpty()) {
-            $priorityTasks = (clone $taskQuery)
-                ->where('priority', '!=', 'urgent')
-                ->orderByRaw("case priority when 'high' then 1 when 'medium' then 2 when 'low' then 3 when 'none' then 4 else 5 end")
-                ->orderBy('due_date')
-                ->orderByDesc('created_at')
-                ->limit(7)
-                ->get();
-            $isShowingFallbackTasks = true;
+        if ($urgentTasks->isNotEmpty()) {
+            return [$urgentTasks, false];
         }
 
-        return view('dashboard', [
-            'employeesCount' => $user->employees_count,
-            'tasksCount' => $user->tasks_count,
-            'notesCount' => $user->notes_count,
-            'priorityTasks' => $priorityTasks,
-            'isShowingFallbackTasks' => $isShowingFallbackTasks,
-        ]);
+        $fallbackTasks = (clone $taskQuery)
+            ->where('priority', '!=', 'urgent')
+            ->orderByRaw("case priority when 'high' then 1 when 'medium' then 2 when 'low' then 3 when 'none' then 4 else 5 end")
+            ->orderByRaw('due_date is null')
+            ->orderBy('due_date')
+            ->orderByDesc('created_at')
+            ->limit(7)
+            ->get();
+
+        return [$fallbackTasks, true];
     }
 }

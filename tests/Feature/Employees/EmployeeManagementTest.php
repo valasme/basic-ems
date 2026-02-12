@@ -101,6 +101,18 @@ class EmployeeManagementTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_create_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to create employee right now. Please try again.'])
+            ->get(route('employees.create'));
+
+        $response->assertOk();
+        $response->assertSee('Unable to create employee right now. Please try again.');
+    }
+
     public function test_user_can_create_employee_with_normalized_fields(): void
     {
         $user = User::factory()->create();
@@ -202,6 +214,19 @@ class EmployeeManagementTest extends TestCase
 
         $editResponse = $this->actingAs($user)->get(route('employees.edit', $employee));
         $editResponse->assertOk();
+    }
+
+    public function test_edit_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to update employee right now. Please try again.'])
+            ->get(route('employees.edit', $employee));
+
+        $response->assertOk();
+        $response->assertSee('Unable to update employee right now. Please try again.');
     }
 
     public function test_user_cannot_view_or_edit_other_users_employee(): void
@@ -326,6 +351,18 @@ class EmployeeManagementTest extends TestCase
         $this->assertDatabaseMissing('employees', ['id' => $employee->id]);
     }
 
+    public function test_index_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to delete employee right now. Please try again.'])
+            ->get(route('employees.index'));
+
+        $response->assertOk();
+        $response->assertSee('Unable to delete employee right now. Please try again.');
+    }
+
     public function test_user_cannot_delete_other_users_employee(): void
     {
         $user = User::factory()->create();
@@ -334,5 +371,156 @@ class EmployeeManagementTest extends TestCase
         $this->actingAs($user)
             ->delete(route('employees.destroy', $otherEmployee))
             ->assertForbidden();
+    }
+
+    public function test_guests_are_redirected_from_attendance_routes(): void
+    {
+        $response = $this->get(route('attendances.index'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_attendance_schedule_is_read_only_without_create_show_or_edit_routes(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/attendances/create')->assertNotFound();
+        $this->actingAs($user)->get('/attendances/1')->assertNotFound();
+        $this->actingAs($user)->get('/attendances/1/edit')->assertNotFound();
+    }
+
+    public function test_attendance_index_lists_only_owned_entries_and_sorts_by_work_in_priority(): void
+    {
+        $user = User::factory()->create();
+
+        $firstEmployee = Employee::factory()
+            ->forUser($user)
+            ->withName('Aaron', 'Early')
+            ->create(['work_in' => '08:00']);
+
+        $lastEmployee = Employee::factory()
+            ->forUser($user)
+            ->withName('Liam', 'Late')
+            ->create(['work_in' => '10:00']);
+
+        $otherUser = User::factory()->create();
+        $otherEmployee = Employee::factory()->forUser($otherUser)->withName('Other', 'User')->create(['work_in' => '07:00']);
+
+        $response = $this->actingAs($user)->get(route('attendances.index'));
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            $firstEmployee->full_name,
+            $lastEmployee->full_name,
+        ]);
+        $response->assertDontSee($otherEmployee->full_name);
+    }
+
+    public function test_attendance_schedule_supports_search_by_employee_name(): void
+    {
+        $user = User::factory()->create();
+        $matching = Employee::factory()->forUser($user)->withName('Mina', 'Stark')->create(['work_in' => '09:00', 'work_out' => '17:00']);
+        $notMatching = Employee::factory()->forUser($user)->withName('John', 'West')->create(['work_in' => '08:00', 'work_out' => '16:00']);
+
+        $response = $this->actingAs($user)->get(route('attendances.index', ['search' => 'Mina']));
+
+        $response->assertOk();
+        $response->assertSee($matching->full_name);
+        $response->assertDontSee($notMatching->full_name);
+    }
+
+    public function test_attendance_schedule_search_is_scoped_per_user_even_with_same_name(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        $owned = Employee::factory()->forUser($user)->withName('Alex', 'Stone')->create(['work_in' => '08:00']);
+        $other = Employee::factory()->forUser($otherUser)->withName('Alex', 'Stone')->create(['work_in' => '07:00']);
+
+        $response = $this->actingAs($user)->get(route('attendances.index', ['search' => 'Alex Stone']));
+
+        $response->assertOk();
+        $response->assertViewHas('employees', function ($employees) use ($owned, $other): bool {
+            return $employees->count() === 1
+                && $employees->first()->id === $owned->id
+                && $employees->first()->id !== $other->id;
+        });
+    }
+
+    public function test_attendance_schedule_orders_employees_with_null_work_in_last(): void
+    {
+        $user = User::factory()->create();
+
+        $early = Employee::factory()->forUser($user)->withName('Early', 'Bird')->create(['work_in' => '07:30']);
+        $late = Employee::factory()->forUser($user)->withName('Late', 'Shift')->create(['work_in' => '10:30']);
+        $unscheduled = Employee::factory()->forUser($user)->withName('No', 'Schedule')->create(['work_in' => null]);
+
+        $response = $this->actingAs($user)->get(route('attendances.index'));
+
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            $early->full_name,
+            $late->full_name,
+            $unscheduled->full_name,
+        ]);
+    }
+
+    public function test_attendance_schedule_treats_blank_search_as_unfiltered_results(): void
+    {
+        $user = User::factory()->create();
+
+        $first = Employee::factory()->forUser($user)->withName('First', 'Worker')->create(['work_in' => '08:00']);
+        $second = Employee::factory()->forUser($user)->withName('Second', 'Worker')->create(['work_in' => '09:00']);
+
+        $response = $this->actingAs($user)->get(route('attendances.index', ['search' => '    ']));
+
+        $response->assertOk();
+        $response->assertSee($first->full_name);
+        $response->assertSee($second->full_name);
+    }
+
+    public function test_attendance_index_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to load attendance right now. Please try again.'])
+            ->get(route('attendances.index'));
+
+        $response->assertOk();
+        $response->assertSee('Unable to load attendance right now. Please try again.');
+    }
+
+    public function test_attendance_schedule_rejects_unsupported_http_methods_with_not_found(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/attendances', [])
+            ->assertStatus(405);
+
+        $this->actingAs($user)
+            ->put('/attendances/1', [])
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->delete('/attendances/1')
+            ->assertNotFound();
+    }
+
+    public function test_attendance_schedule_escapes_employee_name_output_for_security(): void
+    {
+        $user = User::factory()->create();
+        Employee::factory()->forUser($user)->create([
+            'first_name' => '<script>alert(1)</script>',
+            'last_name' => 'Safe',
+            'work_in' => '08:00',
+            'work_out' => '16:00',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('attendances.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('<script>alert(1)</script> Safe', false);
+        $response->assertSee('&lt;script&gt;alert(1)&lt;/script&gt; Safe', false);
     }
 }

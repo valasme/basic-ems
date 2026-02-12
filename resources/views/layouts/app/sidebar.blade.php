@@ -21,11 +21,14 @@
                     <flux:sidebar.item icon="check-circle" :href="route('tasks.index')" :current="request()->routeIs('tasks.*')" wire:navigate>
                         {{ __('Tasks') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="document-text" :href="route('notes.index')" :current="request()->routeIs('notes.*')" wire:navigate>
-                        {{ __('Notes') }}
+                    <flux:sidebar.item icon="clock" :href="route('attendances.index')" :current="request()->routeIs('attendances.*')" wire:navigate>
+                        {{ __('Attendance') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="banknotes" :href="route('due-payments.index')" :current="request()->routeIs('due-payments.*')" wire:navigate>
                         {{ __('Due Payments') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="document-text" :href="route('notes.index')" :current="request()->routeIs('notes.*')" wire:navigate>
+                        {{ __('Notes') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>

@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DuePayment;
 use App\Models\Employee;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Throwable;
 
-class DuePaymentController extends Controller
+class AttendanceController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): View
     {
-        $this->authorize('viewAny', DuePayment::class);
+        $this->authorize('viewAny', Employee::class);
 
         /** @var string|null $search */
         $search = $request->query('search');
@@ -29,21 +28,22 @@ class DuePaymentController extends Controller
             /** @var Collection<int, Employee> $loadedEmployees */
             $loadedEmployees = $user
                 ->employees()
-                ->select(['id', 'user_id', 'first_name', 'last_name', 'pay_day', 'pay_amount', 'job_title'])
-                ->withPayDay()
+                ->select(['id', 'user_id', 'first_name', 'last_name', 'work_in', 'work_out', 'department', 'job_title'])
                 ->search($search)
                 ->get()
-                ->sortBy(fn (Employee $employee): int => $employee->days_until_pay ?? PHP_INT_MAX)
+                ->sortBy(function (Employee $employee): string {
+                    return $employee->work_in ?? '99:99';
+                })
                 ->values();
 
             $employees = $loadedEmployees;
         } catch (Throwable $exception) {
             report($exception);
 
-            $request->session()->flash('error', 'Unable to load due payments right now. Please try again.');
+            $request->session()->flash('error', 'Unable to load attendance right now. Please try again.');
         }
 
-        return view('duepayments.index', [
+        return view('attendance.index', [
             'employees' => $employees,
             'search' => $search,
         ]);

@@ -33,6 +33,13 @@
 			</div>
 		@endif
 
+		@if (session('error'))
+			<flux:callout variant="danger" role="alert" aria-live="assertive">
+				<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
+				<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
+			</flux:callout>
+		@endif
+
 		<form method="GET" action="{{ route('notes.index') }}" role="search" class="flex items-center gap-2">
 			<flux:input
 				type="search"

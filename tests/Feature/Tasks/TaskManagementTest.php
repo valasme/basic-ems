@@ -145,6 +145,18 @@ class TaskManagementTest extends TestCase
         ]);
     }
 
+    public function test_create_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to create task right now. Please try again.'])
+            ->get(route('tasks.create'));
+
+        $response->assertOk();
+        $response->assertSee('Unable to create task right now. Please try again.');
+    }
+
     public function test_completed_tasks_force_priority_to_none_on_create(): void
     {
         $user = User::factory()->create();
@@ -211,6 +223,34 @@ class TaskManagementTest extends TestCase
 
         $editResponse = $this->actingAs($user)->get(route('tasks.edit', $task));
         $editResponse->assertOk();
+    }
+
+    public function test_show_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+        $task = Task::factory()->forEmployee($employee)->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to view task right now. Please try again.'])
+            ->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertSee('Unable to view task right now. Please try again.');
+    }
+
+    public function test_edit_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+        $task = Task::factory()->forEmployee($employee)->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to update task right now. Please try again.'])
+            ->get(route('tasks.edit', $task));
+
+        $response->assertOk();
+        $response->assertSee('Unable to update task right now. Please try again.');
     }
 
     public function test_user_cannot_view_or_edit_other_users_task(): void
@@ -356,6 +396,18 @@ class TaskManagementTest extends TestCase
         $response->assertRedirect(route('tasks.index'));
 
         $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+    }
+
+    public function test_index_page_displays_flashed_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Unable to delete task right now. Please try again.'])
+            ->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSee('Unable to delete task right now. Please try again.');
     }
 
     public function test_user_cannot_delete_other_users_task(): void

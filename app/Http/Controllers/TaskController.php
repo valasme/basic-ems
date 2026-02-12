@@ -11,6 +11,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Throwable;
 
 class TaskController extends Controller
 {
@@ -66,9 +67,17 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request): RedirectResponse
     {
-        $request->user()
-            ->tasks()
-            ->create($request->validated());
+        try {
+            $request->user()
+                ->tasks()
+                ->create($request->validated());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Unable to create task right now. Please try again.');
+        }
 
         return redirect()
             ->route('tasks.index')
@@ -115,7 +124,15 @@ class TaskController extends Controller
      */
     public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
     {
-        $task->update($request->validated());
+        try {
+            $task->update($request->validated());
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Unable to update task right now. Please try again.');
+        }
 
         return redirect()
             ->route('tasks.index')
@@ -129,7 +146,15 @@ class TaskController extends Controller
     {
         $this->authorize('delete', $task);
 
-        $task->delete();
+        try {
+            $task->delete();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('tasks.index')
+                ->with('error', 'Unable to delete task right now. Please try again.');
+        }
 
         return redirect()
             ->route('tasks.index')
