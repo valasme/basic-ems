@@ -1,5 +1,5 @@
 <x-layouts::app :title="__(':title - BasicEMS', ['title' => $note->note_title])">
-	<div class="flex h-full w-full flex-1 flex-col gap-6">
+	<main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
 		<div class="flex items-center gap-4">
 			<flux:button
 				href="{{ route('notes.index') }}"
@@ -8,7 +8,7 @@
 				aria-label="{{ __('Back to notes') }}"
 				wire:navigate
 			/>
-			<flux:heading size="xl">{{ $note->note_title }}</flux:heading>
+			<flux:heading id="page-title" size="xl">{{ $note->note_title }}</flux:heading>
 		</div>
 
 		@if (session('error'))
@@ -26,11 +26,11 @@
 						<flux:subheading>{{ __('Created :date', ['date' => $note->created_at->format('M d, Y \a\t g:i A')]) }}</flux:subheading>
 					</div>
 					<div class="flex items-center gap-2">
-						<flux:button href="{{ route('notes.edit', $note) }}" variant="ghost" icon="pencil" wire:navigate>
+						<flux:button href="{{ route('notes.edit', $note) }}" variant="ghost" icon="pencil" aria-label="{{ __('Edit :title', ['title' => $note->note_title]) }}" wire:navigate>
 							{{ __('Edit') }}
 						</flux:button>
 						<flux:modal.trigger name="delete-note">
-						<flux:button variant="ghost" icon="trash">
+						<flux:button variant="ghost" icon="trash" aria-label="{{ __('Delete :title', ['title' => $note->note_title]) }}">
 								{{ __('Delete') }}
 							</flux:button>
 						</flux:modal.trigger>
@@ -39,10 +39,12 @@
 
 				<flux:separator />
 
-				<div>
-					<flux:subheading>{{ __('Description') }}</flux:subheading>
-					<flux:heading size="sm" class="mt-1 whitespace-pre-wrap">{{ $note->note_description ?? '-' }}</flux:heading>
-				</div>
+				<dl>
+					<div>
+						<dt><flux:subheading>{{ __('Description') }}</flux:subheading></dt>
+						<dd><flux:heading size="sm" class="mt-1 whitespace-pre-wrap">{{ $note->note_description ?? '-' }}</flux:heading></dd>
+					</div>
+				</dl>
 			</div>
 		</flux:card>
 
@@ -72,5 +74,5 @@
 				</div>
 			</div>
 		</flux:modal>
-	</div>
+	</main>
 </x-layouts::app>

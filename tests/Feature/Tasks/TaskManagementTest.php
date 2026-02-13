@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -76,6 +77,200 @@ class TaskManagementTest extends TestCase
         $searchByFullName = $this->actingAs($user)->get(route('tasks.index', ['search' => 'Maria Lopez']));
         $searchByFullName->assertOk();
         $searchByFullName->assertSee($task->title);
+    }
+
+    public function test_index_supports_task_filter_dropdown_ordering_modes(): void
+    {
+        $user = User::factory()->create();
+        $employeeA = Employee::factory()->forUser($user)->withName('Aaron', 'Able')->create();
+        $employeeB = Employee::factory()->forUser($user)->withName('Zoe', 'Zane')->create();
+
+        $taskA = Task::factory()->forEmployee($employeeB)->create([
+            'title' => 'Zulu Plan',
+            'status' => 'pending',
+            'priority' => 'urgent',
+            'due_date' => '2026-02-20',
+            'created_at' => now()->subDays(4),
+        ]);
+
+        $taskB = Task::factory()->forUser($user)->create([
+            'title' => 'Alpha Launch',
+            'status' => 'completed',
+            'priority' => 'none',
+            'due_date' => null,
+            'created_at' => now()->subDay(),
+        ]);
+
+        $taskC = Task::factory()->forEmployee($employeeA)->create([
+            'title' => 'Beta Review',
+            'status' => 'in_progress',
+            'priority' => 'medium',
+            'due_date' => '2026-02-18',
+            'created_at' => now()->subDays(2),
+        ]);
+
+        $taskD = Task::factory()->forEmployee($employeeA)->create([
+            'title' => 'Gamma Ops',
+            'status' => 'pending',
+            'priority' => 'high',
+            'due_date' => '2026-02-25',
+            'created_at' => now()->subDays(3),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'priority_only']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskD, $taskC, $taskB): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskA->id,
+                    $taskD->id,
+                    $taskC->id,
+                    $taskB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'priority_status']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskD, $taskC, $taskB): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskA->id,
+                    $taskD->id,
+                    $taskC->id,
+                    $taskB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'title_alpha']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskB, $taskC, $taskD): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskB->id,
+                    $taskC->id,
+                    $taskD->id,
+                    $taskA->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'title_reverse']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskB, $taskC, $taskD): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskA->id,
+                    $taskD->id,
+                    $taskC->id,
+                    $taskB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'employee_alpha']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskB, $taskC, $taskD): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskC->id,
+                    $taskD->id,
+                    $taskA->id,
+                    $taskB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'employee_reverse']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskB, $taskC, $taskD): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskA->id,
+                    $taskC->id,
+                    $taskD->id,
+                    $taskB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'status_workflow']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskB, $taskC, $taskD): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskA->id,
+                    $taskD->id,
+                    $taskC->id,
+                    $taskB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'due_date_soonest']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskB, $taskC, $taskD): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskC->id,
+                    $taskA->id,
+                    $taskD->id,
+                    $taskB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('tasks.index', ['filter' => 'due_date_latest']))
+            ->assertOk()
+            ->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($taskA, $taskB, $taskC, $taskD): bool {
+                return $tasks->pluck('id')->take(4)->values()->all() === [
+                    $taskD->id,
+                    $taskA->id,
+                    $taskC->id,
+                    $taskB->id,
+                ];
+            });
+    }
+
+    public function test_index_filter_handling_supports_aliases_and_invalid_filters(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->withName('Mona', 'Zed')->create();
+
+        $oldTask = Task::factory()->forEmployee($employee)->create([
+            'title' => 'Old task',
+            'status' => 'pending',
+            'priority' => 'high',
+            'due_date' => '2026-02-18',
+            'created_at' => now()->subDays(4),
+        ]);
+
+        $newTask = Task::factory()->forUser($user)->create([
+            'title' => 'New task',
+            'status' => 'completed',
+            'priority' => 'none',
+            'due_date' => null,
+            'created_at' => now()->subDay(),
+        ]);
+
+        $aliasStatusResponse = $this->actingAs($user)->get(route('tasks.index', ['filter' => 'status']));
+        $aliasStatusResponse->assertOk();
+        $aliasStatusResponse->assertViewHas('filter', 'status_workflow');
+
+        $aliasDueDateResponse = $this->actingAs($user)->get(route('tasks.index', ['filter' => 'due_date']));
+        $aliasDueDateResponse->assertOk();
+        $aliasDueDateResponse->assertViewHas('filter', 'due_date_soonest');
+        $aliasDueDateResponse->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($oldTask, $newTask): bool {
+            return $tasks->pluck('id')->take(2)->values()->all() === [
+                $oldTask->id,
+                $newTask->id,
+            ];
+        });
+
+        $invalidResponse = $this->actingAs($user)->get(route('tasks.index', ['filter' => 'bad_filter']));
+        $invalidResponse->assertOk();
+        $invalidResponse->assertSessionHas('error', 'Invalid filter selected. Showing default ordering.');
+        $invalidResponse->assertViewHas('filter', 'priority_status');
+        $invalidResponse->assertViewHas('tasks', function (LengthAwarePaginator $tasks) use ($oldTask, $newTask): bool {
+            return $tasks->pluck('id')->take(2)->values()->all() === [
+                $oldTask->id,
+                $newTask->id,
+            ];
+        });
     }
 
     public function test_index_is_paginated_to_25_tasks_per_page(): void

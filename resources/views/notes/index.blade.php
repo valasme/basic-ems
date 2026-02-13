@@ -1,7 +1,7 @@
 <x-layouts::app :title="__('Notes - BasicEMS')">
-	<div class="flex h-full w-full flex-1 flex-col gap-6">
+	<main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
 		<div class="flex items-center justify-between">
-			<flux:heading size="xl">{{ __('Notes') }}</flux:heading>
+			<flux:heading id="page-title" size="xl">{{ __('Notes') }}</flux:heading>
 			<flux:button href="{{ route('notes.create') }}" variant="primary" wire:navigate>
 				{{ __('Add Note') }}
 			</flux:button>
@@ -11,7 +11,7 @@
 			<div x-data="{ open: true }" x-show="open">
 				<flux:callout variant="success" role="status" aria-live="polite">
 					<div class="flex items-start gap-4">
-						<div class="mt-0.5 flex size-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+						<div class="mt-0.5 flex size-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600" aria-hidden="true">
 							<flux:icon name="check-circle" class="size-4" />
 						</div>
 						<div class="min-w-0 flex-1">
@@ -40,27 +40,48 @@
 			</flux:callout>
 		@endif
 
-		<form method="GET" action="{{ route('notes.index') }}" role="search" class="flex items-center gap-2">
-			<flux:input
-				type="search"
-				name="search"
-				placeholder="{{ __('Search notes...') }}"
-				value="{{ $search }}"
-				icon="magnifying-glass"
-				aria-label="{{ __('Search notes') }}"
-				class="max-w-xs"
-			/>
-			<flux:button type="submit">{{ __('Search') }}</flux:button>
-			@if ($search)
+		<form method="GET" action="{{ route('notes.index') }}" role="search" aria-describedby="notes-search-help" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+			<p id="notes-search-help" class="sr-only">
+				{{ __('Search notes by text and sort the list using the filter dropdown.') }}
+			</p>
+			<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+				<label for="notes-search" class="sr-only">{{ __('Search notes') }}</label>
+				<flux:input
+					id="notes-search"
+					type="search"
+					name="search"
+					placeholder="{{ __('Search notes...') }}"
+					value="{{ $search }}"
+					icon="magnifying-glass"
+					class="w-full max-w-xs"
+				/>
+				<flux:button type="submit">{{ __('Search') }}</flux:button>
+			</div>
+			<label for="notes-filter" class="sr-only">{{ __('Sort notes') }}</label>
+			<flux:select id="notes-filter" name="filter" aria-label="{{ __('Sort notes') }}" class="min-w-56">
+				<option value="created_newest" @selected($filter === 'created_newest')>{{ __('Created Date (Newest)') }}</option>
+				<option value="created_oldest" @selected($filter === 'created_oldest')>{{ __('Created Date (Oldest)') }}</option>
+				<option value="updated_newest" @selected($filter === 'updated_newest')>{{ __('Updated Date (Newest)') }}</option>
+				<option value="updated_oldest" @selected($filter === 'updated_oldest')>{{ __('Updated Date (Oldest)') }}</option>
+				<option value="title_alpha" @selected($filter === 'title_alpha')>{{ __('Title (A-Z)') }}</option>
+				<option value="title_reverse" @selected($filter === 'title_reverse')>{{ __('Title (Z-A)') }}</option>
+				<option value="description_alpha" @selected($filter === 'description_alpha')>{{ __('Description (A-Z)') }}</option>
+				<option value="description_reverse" @selected($filter === 'description_reverse')>{{ __('Description (Z-A)') }}</option>
+			</flux:select>
+			@if ($search || $filter !== 'created_newest')
 				<flux:button href="{{ route('notes.index') }}" variant="ghost" wire:navigate>
-					{{ __('Clear') }}
+					{{ __('Clear Filters') }}
 				</flux:button>
 			@endif
 		</form>
 
+		<p class="sr-only" aria-live="polite">
+			{{ trans_choice('{0} No notes found|{1} :count note found|[2,*] :count notes found', $notes->total(), ['count' => $notes->total()]) }}
+		</p>
+
 		@if ($notes->isEmpty())
-			<flux:card class="text-center">
-				<flux:icon name="document-text" class="mx-auto size-12 text-zinc-400" />
+			<flux:card class="text-center" role="status" aria-live="polite">
+				<flux:icon name="document-text" class="mx-auto size-12 text-zinc-400" aria-hidden="true" />
 				<flux:heading size="lg" class="mt-4">{{ __('No notes found') }}</flux:heading>
 				<flux:subheading class="mt-2">
 					@if ($search)
@@ -78,7 +99,10 @@
 				@endunless
 			</flux:card>
 		@else
-			<flux:table>
+			<flux:table aria-label="{{ __('Notes list') }}" aria-describedby="notes-table-caption">
+				<caption id="notes-table-caption" class="sr-only">
+					{{ __('Notes list showing title, description, created date, and actions.') }}
+				</caption>
 				<flux:table.columns>
 					<flux:table.column>{{ __('Title') }}</flux:table.column>
 					<flux:table.column>{{ __('Description') }}</flux:table.column>
@@ -137,12 +161,14 @@
 			@foreach ($notes as $note)
 				<flux:modal
 					:name="'delete-note-'.$note->id"
+					:aria-labelledby="'delete-note-title-'.$note->id"
+					:aria-describedby="'delete-note-desc-'.$note->id"
 					class="md:w-96"
 				>
 					<div class="space-y-6">
 						<div>
-							<flux:heading size="lg">{{ __('Delete Note') }}</flux:heading>
-							<flux:subheading class="mt-2">
+							<flux:heading :id="'delete-note-title-'.$note->id" size="lg">{{ __('Delete Note') }}</flux:heading>
+							<flux:subheading :id="'delete-note-desc-'.$note->id" class="mt-2">
 								{{ __('Are you sure you want to delete :title? This action cannot be undone.', ['title' => $note->note_title]) }}
 							</flux:subheading>
 						</div>
@@ -167,5 +193,5 @@
 				</div>
 			@endif
 		@endif
-	</div>
+	</main>
 </x-layouts::app>

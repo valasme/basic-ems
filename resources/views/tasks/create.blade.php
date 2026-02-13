@@ -1,5 +1,5 @@
 <x-layouts::app :title="__('Add Task - BasicEMS')">
-	<div class="flex h-full w-full flex-1 flex-col gap-6">
+	<main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
 		<div class="flex items-center gap-4">
 			<flux:button
 				href="{{ route('tasks.index') }}"
@@ -8,13 +8,24 @@
 				aria-label="{{ __('Back to tasks') }}"
 				wire:navigate
 			/>
-			<flux:heading size="xl">{{ __('Add Task') }}</flux:heading>
+			<flux:heading id="page-title" size="xl">{{ __('Add Task') }}</flux:heading>
 		</div>
 
 		@if (session('error'))
 			<flux:callout variant="danger" role="alert" aria-live="assertive">
 				<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
 				<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
+			</flux:callout>
+		@endif
+
+		@if ($errors->any())
+			<flux:callout variant="danger" role="alert" aria-live="assertive">
+				<flux:heading size="sm">{{ __('Please fix the following errors') }}</flux:heading>
+				<ul class="mt-2 list-disc ps-5 text-sm">
+					@foreach ($errors->all() as $error)
+						<li>{{ $error }}</li>
+					@endforeach
+				</ul>
 			</flux:callout>
 		@endif
 
@@ -38,11 +49,17 @@
 				method="POST"
 				action="{{ route('tasks.store') }}"
 				class="flex h-full flex-col gap-6"
+				aria-describedby="task-form-help"
 				x-data="{ status: '{{ old('status', 'pending') }}' }"
 			>
 				@csrf
 
-				<div class="grid flex-1 content-start auto-rows-min gap-6 sm:grid-cols-2">
+				<p id="task-form-help" class="sr-only">
+					{{ __('All required fields must be completed before creating the task.') }}
+				</p>
+
+				<fieldset class="grid flex-1 content-start auto-rows-min gap-6 sm:grid-cols-2">
+					<legend class="sr-only">{{ __('Task information') }}</legend>
 					<flux:field class="sm:col-span-2">
 						<flux:label>{{ __('Title') }}</flux:label>
 						<flux:input
@@ -51,6 +68,7 @@
 							value="{{ old('title') }}"
 							placeholder="{{ __('Enter task title') }}"
 							required
+							aria-required="true"
 							autofocus
 						/>
 						<flux:error name="title" />
@@ -71,7 +89,7 @@
 
 					<flux:field>
 						<flux:label>{{ __('Status') }}</flux:label>
-						<flux:select name="status" x-model="status" required>
+						<flux:select name="status" x-model="status" required aria-required="true">
 							@foreach ($statuses as $value => $label)
 								<option value="{{ $value }}" @selected(old('status', 'pending') === $value)>
 									{{ $label }}
@@ -83,7 +101,7 @@
 
 					<flux:field x-show="status !== 'completed'">
 						<flux:label>{{ __('Priority') }}</flux:label>
-						<flux:select name="priority" required>
+						<flux:select name="priority" required aria-required="true">
 							@foreach ($priorities as $value => $label)
 								<option value="{{ $value }}" @selected(old('priority', 'medium') === $value)>
 									{{ $label }}
@@ -115,7 +133,7 @@
 						>{{ old('description') }}</flux:textarea>
 						<flux:error name="description" />
 					</flux:field>
-				</div>
+				</fieldset>
 
 				<div class="mt-6 flex items-center gap-3">
 					<flux:spacer />
@@ -128,5 +146,5 @@
 				</div>
 			</form>
 		</flux:card>
-	</div>
+	</main>
 </x-layouts::app>

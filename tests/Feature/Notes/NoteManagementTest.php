@@ -5,6 +5,7 @@ namespace Tests\Feature\Notes;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Tests\TestCase;
 
 class NoteManagementTest extends TestCase
@@ -63,6 +64,160 @@ class NoteManagementTest extends TestCase
         $searchByDescription = $this->actingAs($user)->get(route('notes.index', ['search' => 'timeline']));
         $searchByDescription->assertOk();
         $searchByDescription->assertSee($note->note_title);
+    }
+
+    public function test_index_supports_note_filter_dropdown_ordering_modes(): void
+    {
+        $user = User::factory()->create();
+
+        $noteA = Note::factory()->forUser($user)->create([
+            'note_title' => 'Zulu Memo',
+            'note_description' => 'charlie details',
+            'created_at' => now()->subDays(4),
+            'updated_at' => now()->subDays(2),
+        ]);
+
+        $noteB = Note::factory()->forUser($user)->create([
+            'note_title' => 'Alpha Plan',
+            'note_description' => 'alpha details',
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDays(4),
+        ]);
+
+        $noteC = Note::factory()->forUser($user)->create([
+            'note_title' => 'Beta Brief',
+            'note_description' => 'bravo details',
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('notes.index', ['filter' => 'title_alpha']))
+            ->assertOk()
+            ->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($noteA, $noteB, $noteC): bool {
+                return $notes->pluck('id')->take(3)->values()->all() === [
+                    $noteB->id,
+                    $noteC->id,
+                    $noteA->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('notes.index', ['filter' => 'title_reverse']))
+            ->assertOk()
+            ->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($noteA, $noteB, $noteC): bool {
+                return $notes->pluck('id')->take(3)->values()->all() === [
+                    $noteA->id,
+                    $noteC->id,
+                    $noteB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('notes.index', ['filter' => 'description_alpha']))
+            ->assertOk()
+            ->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($noteA, $noteB, $noteC): bool {
+                return $notes->pluck('id')->take(3)->values()->all() === [
+                    $noteB->id,
+                    $noteC->id,
+                    $noteA->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('notes.index', ['filter' => 'description_reverse']))
+            ->assertOk()
+            ->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($noteA, $noteB, $noteC): bool {
+                return $notes->pluck('id')->take(3)->values()->all() === [
+                    $noteA->id,
+                    $noteC->id,
+                    $noteB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('notes.index', ['filter' => 'created_newest']))
+            ->assertOk()
+            ->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($noteA, $noteB, $noteC): bool {
+                return $notes->pluck('id')->take(3)->values()->all() === [
+                    $noteB->id,
+                    $noteC->id,
+                    $noteA->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('notes.index', ['filter' => 'created_oldest']))
+            ->assertOk()
+            ->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($noteA, $noteB, $noteC): bool {
+                return $notes->pluck('id')->take(3)->values()->all() === [
+                    $noteA->id,
+                    $noteC->id,
+                    $noteB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('notes.index', ['filter' => 'updated_newest']))
+            ->assertOk()
+            ->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($noteA, $noteB, $noteC): bool {
+                return $notes->pluck('id')->take(3)->values()->all() === [
+                    $noteC->id,
+                    $noteA->id,
+                    $noteB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('notes.index', ['filter' => 'updated_oldest']))
+            ->assertOk()
+            ->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($noteA, $noteB, $noteC): bool {
+                return $notes->pluck('id')->take(3)->values()->all() === [
+                    $noteB->id,
+                    $noteA->id,
+                    $noteC->id,
+                ];
+            });
+    }
+
+    public function test_index_filter_handling_supports_aliases_and_invalid_filters(): void
+    {
+        $user = User::factory()->create();
+
+        $olderNote = Note::factory()->forUser($user)->create([
+            'note_title' => 'Older note',
+            'created_at' => now()->subDays(3),
+        ]);
+
+        $newerNote = Note::factory()->forUser($user)->create([
+            'note_title' => 'Newer note',
+            'created_at' => now()->subDay(),
+        ]);
+
+        $aliasTitleResponse = $this->actingAs($user)->get(route('notes.index', ['filter' => 'title']));
+        $aliasTitleResponse->assertOk();
+        $aliasTitleResponse->assertViewHas('filter', 'title_alpha');
+
+        $aliasCreatedResponse = $this->actingAs($user)->get(route('notes.index', ['filter' => 'created_date']));
+        $aliasCreatedResponse->assertOk();
+        $aliasCreatedResponse->assertViewHas('filter', 'created_newest');
+        $aliasCreatedResponse->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($olderNote, $newerNote): bool {
+            return $notes->pluck('id')->take(2)->values()->all() === [
+                $newerNote->id,
+                $olderNote->id,
+            ];
+        });
+
+        $invalidResponse = $this->actingAs($user)->get(route('notes.index', ['filter' => 'bad_filter']));
+        $invalidResponse->assertOk();
+        $invalidResponse->assertSessionHas('error', 'Invalid filter selected. Showing default ordering.');
+        $invalidResponse->assertViewHas('filter', 'created_newest');
+        $invalidResponse->assertViewHas('notes', function (LengthAwarePaginator $notes) use ($olderNote, $newerNote): bool {
+            return $notes->pluck('id')->take(2)->values()->all() === [
+                $newerNote->id,
+                $olderNote->id,
+            ];
+        });
     }
 
     public function test_index_is_paginated_to_25_notes_per_page(): void

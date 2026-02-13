@@ -1,7 +1,7 @@
 <x-layouts::app :title="__('Employees - BasicEMS')">
-    <div class="flex h-full w-full flex-1 flex-col gap-6">
+    <main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
         <div class="flex items-center justify-between">
-            <flux:heading size="xl">{{ __('Employees') }}</flux:heading>
+            <flux:heading id="page-title" size="xl">{{ __('Employees') }}</flux:heading>
             <flux:button href="{{ route('employees.create') }}" variant="primary" wire:navigate>
                 {{ __('Add Employee') }}
             </flux:button>
@@ -11,7 +11,7 @@
             <div x-data="{ open: true }" x-show="open">
                 <flux:callout variant="success" role="status" aria-live="polite">
                     <div class="flex items-start gap-4">
-                        <div class="mt-0.5 flex size-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
+                        <div class="mt-0.5 flex size-8 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600" aria-hidden="true">
                             <flux:icon name="check-circle" class="size-4" />
                         </div>
                         <div class="min-w-0 flex-1">
@@ -56,27 +56,52 @@
             </div>
         @endif
 
-        <form method="GET" action="{{ route('employees.index') }}" role="search" class="flex items-center gap-2">
-            <flux:input
-                type="search"
-                name="search"
-                placeholder="{{ __('Search employees...') }}"
-                value="{{ $search }}"
-                icon="magnifying-glass"
-                aria-label="{{ __('Search employees') }}"
-                class="max-w-xs"
-            />
-            <flux:button type="submit">{{ __('Search') }}</flux:button>
-            @if ($search)
+        <form method="GET" action="{{ route('employees.index') }}" role="search" aria-describedby="employees-search-help" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <p id="employees-search-help" class="sr-only">
+                {{ __('Search employees by text and sort the list using the filter dropdown.') }}
+            </p>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <label for="employees-search" class="sr-only">{{ __('Search employees') }}</label>
+                <flux:input
+                    id="employees-search"
+                    type="search"
+                    name="search"
+                    placeholder="{{ __('Search employees...') }}"
+                    value="{{ $search }}"
+                    icon="magnifying-glass"
+                    class="w-full max-w-xs"
+                />
+                <flux:button type="submit">{{ __('Search') }}</flux:button>
+            </div>
+            <label for="employees-filter" class="sr-only">{{ __('Sort employees') }}</label>
+            <flux:select id="employees-filter" name="filter" aria-label="{{ __('Sort employees') }}" class="min-w-56">
+                <option value="name_alpha" @selected($filter === 'name_alpha')>{{ __('Name (A-Z)') }}</option>
+                <option value="name_reverse" @selected($filter === 'name_reverse')>{{ __('Name (Z-A)') }}</option>
+                <option value="email_alpha" @selected($filter === 'email_alpha')>{{ __('Email (A-Z)') }}</option>
+                <option value="email_reverse" @selected($filter === 'email_reverse')>{{ __('Email (Z-A)') }}</option>
+                <option value="department_alpha" @selected($filter === 'department_alpha')>{{ __('Department (A-Z)') }}</option>
+                <option value="department_reverse" @selected($filter === 'department_reverse')>{{ __('Department (Z-A)') }}</option>
+                <option value="job_title_alpha" @selected($filter === 'job_title_alpha')>{{ __('Job Title (A-Z)') }}</option>
+                <option value="job_title_reverse" @selected($filter === 'job_title_reverse')>{{ __('Job Title (Z-A)') }}</option>
+                <option value="created_newest" @selected($filter === 'created_newest')>{{ __('Created Date (Newest)') }}</option>
+                <option value="created_oldest" @selected($filter === 'created_oldest')>{{ __('Created Date (Oldest)') }}</option>
+                <option value="salary_highest" @selected($filter === 'salary_highest')>{{ __('Calculated Salary (Highest)') }}</option>
+                <option value="salary_lowest" @selected($filter === 'salary_lowest')>{{ __('Calculated Salary (Lowest)') }}</option>
+            </flux:select>
+            @if ($search || $filter !== 'name_alpha')
                 <flux:button href="{{ route('employees.index') }}" variant="ghost" wire:navigate>
-                    {{ __('Clear') }}
+                    {{ __('Clear Filters') }}
                 </flux:button>
             @endif
         </form>
 
+        <p class="sr-only" aria-live="polite">
+            {{ trans_choice('{0} No employees found|{1} :count employee found|[2,*] :count employees found', $employees->total(), ['count' => $employees->total()]) }}
+        </p>
+
         @if ($employees->isEmpty())
-            <flux:card class="text-center">
-                <flux:icon name="users" class="mx-auto size-12 text-zinc-400" />
+            <flux:card class="text-center" role="status" aria-live="polite">
+                <flux:icon name="users" class="mx-auto size-12 text-zinc-400" aria-hidden="true" />
                 <flux:heading size="lg" class="mt-4">{{ __('No employees found') }}</flux:heading>
                 <flux:subheading class="mt-2">
                     @if ($search)
@@ -94,7 +119,10 @@
                 @endunless
             </flux:card>
         @else
-            <flux:table>
+            <flux:table aria-label="{{ __('Employees list') }}" aria-describedby="employees-table-caption">
+                <caption id="employees-table-caption" class="sr-only">
+                    {{ __('Employee directory showing name, email, department, job title, and available actions.') }}
+                </caption>
                 <flux:table.columns>
                     <flux:table.column>{{ __('Name') }}</flux:table.column>
                     <flux:table.column>{{ __('Email') }}</flux:table.column>
@@ -153,12 +181,14 @@
             @foreach ($employees as $employee)
                 <flux:modal
                     :name="'delete-employee-'.$employee->id"
+                    :aria-labelledby="'delete-employee-title-'.$employee->id"
+                    :aria-describedby="'delete-employee-desc-'.$employee->id"
                     class="md:w-96"
                 >
                     <div class="space-y-6">
                         <div>
-                            <flux:heading size="lg">{{ __('Delete Employee') }}</flux:heading>
-                            <flux:subheading class="mt-2">
+                            <flux:heading :id="'delete-employee-title-'.$employee->id" size="lg">{{ __('Delete Employee') }}</flux:heading>
+                            <flux:subheading :id="'delete-employee-desc-'.$employee->id" class="mt-2">
                                 {{ __('Are you sure you want to delete :name? This action cannot be undone.', ['name' => $employee->full_name]) }}
                             </flux:subheading>
                         </div>
@@ -183,5 +213,5 @@
                 </div>
             @endif
         @endif
-    </div>
+    </main>
 </x-layouts::app>

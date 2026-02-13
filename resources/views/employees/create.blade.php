@@ -1,5 +1,5 @@
 <x-layouts::app :title="__('Add Employee - BasicEMS')">
-    <div class="flex h-full w-full flex-1 flex-col gap-6">
+    <main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
         <div class="flex items-center gap-4">
             <flux:button
                 href="{{ route('employees.index') }}"
@@ -8,7 +8,7 @@
                 aria-label="{{ __('Back to employees') }}"
                 wire:navigate
             />
-            <flux:heading size="xl">{{ __('Add Employee') }}</flux:heading>
+            <flux:heading id="page-title" size="xl">{{ __('Add Employee') }}</flux:heading>
         </div>
 
         @if (session('error'))
@@ -18,11 +18,27 @@
             </flux:callout>
         @endif
 
+        @if ($errors->any())
+            <flux:callout variant="danger" role="alert" aria-live="assertive">
+                <flux:heading size="sm">{{ __('Please fix the following errors') }}</flux:heading>
+                <ul class="mt-2 list-disc ps-5 text-sm">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </flux:callout>
+        @endif
+
         <flux:card class="flex-1">
-            <form method="POST" action="{{ route('employees.store') }}" class="flex h-full flex-col gap-6">
+            <form method="POST" action="{{ route('employees.store') }}" class="flex h-full flex-col gap-6" aria-describedby="employee-form-help">
                 @csrf
 
-                <div class="grid flex-1 content-start auto-rows-min gap-6 sm:grid-cols-2">
+                <p id="employee-form-help" class="sr-only">
+                    {{ __('All fields marked as required must be completed before creating the employee.') }}
+                </p>
+
+                <fieldset class="grid flex-1 content-start auto-rows-min gap-6 sm:grid-cols-2">
+                    <legend class="sr-only">{{ __('Employee information') }}</legend>
                     <flux:field>
                         <flux:label>{{ __('First Name') }}</flux:label>
                         <flux:input
@@ -32,6 +48,7 @@
                             placeholder="{{ __('Enter first name') }}"
                             autocomplete="given-name"
                             required
+                            aria-required="true"
                             autofocus
                         />
                         <flux:error name="first_name" />
@@ -46,6 +63,7 @@
                             placeholder="{{ __('Enter last name') }}"
                             autocomplete="family-name"
                             required
+                            aria-required="true"
                         />
                         <flux:error name="last_name" />
                     </flux:field>
@@ -59,6 +77,7 @@
                             placeholder="{{ __('Enter email address') }}"
                             autocomplete="email"
                             required
+                            aria-required="true"
                         />
                         <flux:error name="email" />
                     </flux:field>
@@ -145,7 +164,7 @@
                         />
                         <flux:error name="pay_amount" />
                     </flux:field>
-                </div>
+                </fieldset>
 
                 <div class="mt-6 flex items-center gap-3">
                     <flux:spacer />
@@ -158,5 +177,5 @@
                 </div>
             </form>
         </flux:card>
-    </div>
+    </main>
 </x-layouts::app>

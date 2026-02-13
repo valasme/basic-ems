@@ -1,5 +1,5 @@
 <x-layouts::app :title="__(':title - BasicEMS', ['title' => $task->title])">
-	<div class="flex h-full w-full flex-1 flex-col gap-6">
+	<main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
 		<div class="flex items-center gap-4">
 			<flux:button
 				href="{{ route('tasks.index') }}"
@@ -8,7 +8,7 @@
 				aria-label="{{ __('Back to tasks') }}"
 				wire:navigate
 			/>
-			<flux:heading size="xl">{{ $task->title }}</flux:heading>
+			<flux:heading id="page-title" size="xl">{{ $task->title }}</flux:heading>
 		</div>
 
 		@if (session('error'))
@@ -71,11 +71,11 @@
 						<flux:badge :color="$priorityColor">{{ $priorityLabel }}</flux:badge>
 					</div>
 					<div class="flex items-center gap-2">
-						<flux:button href="{{ route('tasks.edit', $task) }}" variant="ghost" icon="pencil" wire:navigate>
+						<flux:button href="{{ route('tasks.edit', $task) }}" variant="ghost" icon="pencil" aria-label="{{ __('Edit :title', ['title' => $task->title]) }}" wire:navigate>
 							{{ __('Edit') }}
 						</flux:button>
 						<flux:modal.trigger name="delete-task">
-						<flux:button variant="ghost" icon="trash">
+						<flux:button variant="ghost" icon="trash" aria-label="{{ __('Delete :title', ['title' => $task->title]) }}">
 								{{ __('Delete') }}
 							</flux:button>
 						</flux:modal.trigger>
@@ -84,34 +84,36 @@
 
 				<flux:separator />
 
-				<div class="grid gap-6 sm:grid-cols-2">
+				<dl class="grid gap-6 sm:grid-cols-2">
 					<div>
-						<flux:subheading>{{ __('Employee') }}</flux:subheading>
-						<flux:heading size="sm" class="mt-1">
-							{{ $task->employee?->full_name ?? __('Unassigned') }}
-						</flux:heading>
+						<dt><flux:subheading>{{ __('Employee') }}</flux:subheading></dt>
+						<dd>
+							<flux:heading size="sm" class="mt-1">
+								{{ $task->employee?->full_name ?? __('Unassigned') }}
+							</flux:heading>
+						</dd>
 					</div>
 					<div>
-						<flux:subheading>{{ __('Status') }}</flux:subheading>
-						<flux:heading size="sm" class="mt-1">{{ $statusLabel }}</flux:heading>
+						<dt><flux:subheading>{{ __('Status') }}</flux:subheading></dt>
+						<dd><flux:heading size="sm" class="mt-1">{{ $statusLabel }}</flux:heading></dd>
 					</div>
 					<div>
-						<flux:subheading>{{ __('Priority') }}</flux:subheading>
-						<flux:heading size="sm" class="mt-1">{{ $priorityLabel }}</flux:heading>
+						<dt><flux:subheading>{{ __('Priority') }}</flux:subheading></dt>
+						<dd><flux:heading size="sm" class="mt-1">{{ $priorityLabel }}</flux:heading></dd>
 					</div>
 					<div>
-						<flux:subheading>{{ __('Due Date') }}</flux:subheading>
-						<flux:heading size="sm" class="mt-1">{{ $task->due_date?->format('M d, Y') ?? '-' }}</flux:heading>
+						<dt><flux:subheading>{{ __('Due Date') }}</flux:subheading></dt>
+						<dd><flux:heading size="sm" class="mt-1">{{ $task->due_date?->format('M d, Y') ?? '-' }}</flux:heading></dd>
 					</div>
 					<div>
-						<flux:subheading>{{ __('Created') }}</flux:subheading>
-						<flux:heading size="sm" class="mt-1">{{ $task->created_at->format('M d, Y \a\t g:i A') }}</flux:heading>
+						<dt><flux:subheading>{{ __('Created') }}</flux:subheading></dt>
+						<dd><flux:heading size="sm" class="mt-1">{{ $task->created_at->format('M d, Y \a\t g:i A') }}</flux:heading></dd>
 					</div>
 					<div class="sm:col-span-2">
-						<flux:subheading>{{ __('Description') }}</flux:subheading>
-						<flux:heading size="sm" class="mt-1">{{ $task->description ?? '-' }}</flux:heading>
+						<dt><flux:subheading>{{ __('Description') }}</flux:subheading></dt>
+						<dd><flux:heading size="sm" class="mt-1">{{ $task->description ?? '-' }}</flux:heading></dd>
 					</div>
-				</div>
+				</dl>
 			</div>
 		</flux:card>
 
@@ -141,5 +143,5 @@
 				</div>
 			</div>
 		</flux:modal>
-	</div>
+	</main>
 </x-layouts::app>

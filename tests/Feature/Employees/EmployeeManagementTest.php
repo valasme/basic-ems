@@ -5,6 +5,7 @@ namespace Tests\Feature\Employees;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Tests\TestCase;
 
 class EmployeeManagementTest extends TestCase
@@ -71,6 +72,225 @@ class EmployeeManagementTest extends TestCase
         $fullNameSearch->assertOk();
         $fullNameSearch->assertSee($owned->full_name);
         $fullNameSearch->assertDontSee($other->full_name);
+    }
+
+    public function test_index_supports_filter_dropdown_ordering_modes(): void
+    {
+        $user = User::factory()->create();
+
+        $employeeA = Employee::factory()
+            ->forUser($user)
+            ->create([
+                'first_name' => 'Zoe',
+                'last_name' => 'Alpha',
+                'email' => 'c@example.com',
+                'department' => 'Sales',
+                'job_title' => 'Coordinator',
+                'pay_amount' => '2000.00',
+                'created_at' => now()->subDays(3),
+            ]);
+
+        $employeeB = Employee::factory()
+            ->forUser($user)
+            ->create([
+                'first_name' => 'Ava',
+                'last_name' => 'Zulu',
+                'email' => 'a@example.com',
+                'department' => 'Engineering',
+                'job_title' => 'Analyst',
+                'pay_amount' => '2500.00',
+                'created_at' => now()->subDays(2),
+            ]);
+
+        $employeeC = Employee::factory()
+            ->forUser($user)
+            ->create([
+                'first_name' => 'Liam',
+                'last_name' => 'Beta',
+                'email' => 'b@example.com',
+                'department' => 'Marketing',
+                'job_title' => 'Manager',
+                'pay_amount' => '1500.00',
+                'created_at' => now()->subDay(),
+            ]);
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'name_alpha']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeB->id,
+                    $employeeC->id,
+                    $employeeA->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'name_reverse']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeA->id,
+                    $employeeC->id,
+                    $employeeB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'email_alpha']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeB->id,
+                    $employeeC->id,
+                    $employeeA->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'email_reverse']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeA->id,
+                    $employeeC->id,
+                    $employeeB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'department_alpha']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeB->id,
+                    $employeeC->id,
+                    $employeeA->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'department_reverse']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeA->id,
+                    $employeeC->id,
+                    $employeeB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'job_title_alpha']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeB->id,
+                    $employeeA->id,
+                    $employeeC->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'job_title_reverse']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeC->id,
+                    $employeeA->id,
+                    $employeeB->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'created_newest']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeC->id,
+                    $employeeB->id,
+                    $employeeA->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'created_oldest']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeA->id,
+                    $employeeB->id,
+                    $employeeC->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'salary_highest']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeB->id,
+                    $employeeA->id,
+                    $employeeC->id,
+                ];
+            });
+
+        $this->actingAs($user)
+            ->get(route('employees.index', ['filter' => 'salary_lowest']))
+            ->assertOk()
+            ->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($employeeA, $employeeB, $employeeC): bool {
+                return $employees->pluck('id')->take(3)->values()->all() === [
+                    $employeeC->id,
+                    $employeeA->id,
+                    $employeeB->id,
+                ];
+            });
+    }
+
+    public function test_index_filter_handling_supports_legacy_values_and_rejects_invalid_values(): void
+    {
+        $user = User::factory()->create();
+
+        $oldest = Employee::factory()->forUser($user)->create([
+            'first_name' => 'Oldest',
+            'last_name' => 'User',
+            'email' => 'oldest@example.com',
+            'pay_amount' => '1000.00',
+            'created_at' => now()->subDays(3),
+        ]);
+
+        $newest = Employee::factory()->forUser($user)->create([
+            'first_name' => 'Newest',
+            'last_name' => 'User',
+            'email' => 'newest@example.com',
+            'pay_amount' => '3000.00',
+            'created_at' => now()->subDay(),
+        ]);
+
+        $legacyCreatedResponse = $this->actingAs($user)->get(route('employees.index', ['filter' => 'created_date']));
+        $legacyCreatedResponse->assertOk();
+        $legacyCreatedResponse->assertViewHas('filter', 'created_newest');
+        $legacyCreatedResponse->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($newest): bool {
+            return $employees->first()?->id === $newest->id;
+        });
+
+        $legacySalaryResponse = $this->actingAs($user)->get(route('employees.index', ['filter' => 'salary_calculated']));
+        $legacySalaryResponse->assertOk();
+        $legacySalaryResponse->assertViewHas('filter', 'salary_highest');
+        $legacySalaryResponse->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($newest): bool {
+            return $employees->first()?->id === $newest->id;
+        });
+
+        $invalidResponse = $this->actingAs($user)->get(route('employees.index', ['filter' => 'totally_invalid']));
+        $invalidResponse->assertOk();
+        $invalidResponse->assertSessionHas('error', 'Invalid filter selected. Showing default ordering.');
+        $invalidResponse->assertViewHas('filter', 'name_alpha');
+        $invalidResponse->assertViewHas('employees', function (LengthAwarePaginator $employees) use ($oldest, $newest): bool {
+            return $employees->pluck('id')->take(2)->values()->all() === [
+                $newest->id,
+                $oldest->id,
+            ];
+        });
     }
 
     public function test_index_is_paginated_to_25_employees_per_page(): void

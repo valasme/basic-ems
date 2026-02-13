@@ -1,7 +1,7 @@
 <x-layouts::app :title="__('Dashboard - BasicEMS')">
-    <div class="flex min-h-screen w-full flex-1 flex-col gap-6">
+    <main class="flex min-h-screen w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
         <div class="space-y-1">
-            <flux:heading size="xl">{{ __('Dashboard') }}</flux:heading>
+            <flux:heading id="page-title" size="xl">{{ __('Dashboard') }}</flux:heading>
             <flux:subheading>{{ __('Quick stats for your workspace.') }}</flux:subheading>
         </div>
 
@@ -31,22 +31,22 @@
             ];
         @endphp
 
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="{{ __('Quick stats') }}">
             @foreach ($quickStats as $stat)
-                <flux:card class="flex h-full flex-col gap-4">
+                <flux:card class="flex h-full flex-col gap-4" role="region" aria-label="{{ $stat['label'] }}">
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-2">
                             <flux:subheading>{{ $stat['label'] }}</flux:subheading>
                             <flux:heading size="lg">{{ $stat['value'] }}</flux:heading>
                         </div>
-                        <flux:icon name="{{ $stat['icon'] }}" class="size-6 text-zinc-500" />
+                        <flux:icon name="{{ $stat['icon'] }}" class="size-6 text-zinc-500" aria-hidden="true" />
                     </div>
                     <flux:button href="{{ $stat['href'] }}" variant="ghost" wire:navigate>
                         {{ $stat['link'] }}
                     </flux:button>
                 </flux:card>
             @endforeach
-        </div>
+        </section>
 
         @php
             $taskSectionTitle = $isShowingFallbackTasks
@@ -77,10 +77,10 @@
             ];
         @endphp
 
-        <div class="flex items-start justify-between gap-3">
+        <div class="flex items-start justify-between gap-3" aria-labelledby="priority-tasks-title" aria-describedby="priority-tasks-subtitle">
             <div class="space-y-1">
-                <flux:heading size="lg">{{ $taskSectionTitle }}</flux:heading>
-                <flux:subheading>{{ $taskSectionSubtitle }}</flux:subheading>
+                <flux:heading id="priority-tasks-title" size="lg">{{ $taskSectionTitle }}</flux:heading>
+                <flux:subheading id="priority-tasks-subtitle">{{ $taskSectionSubtitle }}</flux:subheading>
             </div>
             <flux:button href="{{ route('tasks.index') }}" variant="ghost" wire:navigate>
                 {{ __('View all tasks') }}
@@ -95,11 +95,17 @@
 
         <div class="flex min-h-0 flex-1 flex-col">
             <flux:card class="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+            <p class="sr-only" aria-live="polite">
+                {{ trans_choice('{0} No priority tasks found|{1} :count priority task found|[2,*] :count priority tasks found', $priorityTasks->count(), ['count' => $priorityTasks->count()]) }}
+            </p>
             @if ($priorityTasks->isEmpty())
-                <flux:subheading>{{ __('No tasks yet.') }}</flux:subheading>
+                <flux:subheading role="status" aria-live="polite">{{ __('No tasks yet.') }}</flux:subheading>
             @else
                 <div class="min-h-0 w-full flex-1 overflow-y-auto">
-                    <flux:table>
+                    <flux:table aria-label="{{ __('Priority tasks list') }}" aria-describedby="priority-tasks-caption">
+                        <caption id="priority-tasks-caption" class="sr-only">
+                            {{ __('Priority tasks showing title, assigned employee, priority, due date, and actions.') }}
+                        </caption>
                         <flux:table.columns>
                             <flux:table.column>{{ __('Title') }}</flux:table.column>
                             <flux:table.column>{{ __('Employee') }}</flux:table.column>
@@ -155,10 +161,10 @@
             </flux:card>
         </div>
 
-        <div class="flex items-start justify-between gap-3">
+        <div class="flex items-start justify-between gap-3" aria-labelledby="due-payments-title" aria-describedby="due-payments-subtitle">
             <div class="space-y-1">
-                <flux:heading size="lg">{{ __('Due payments') }}</flux:heading>
-                <flux:subheading>{{ __('Upcoming pay dates sorted by time.') }}</flux:subheading>
+                <flux:heading id="due-payments-title" size="lg">{{ __('Due payments') }}</flux:heading>
+                <flux:subheading id="due-payments-subtitle">{{ __('Upcoming pay dates sorted by time.') }}</flux:subheading>
             </div>
             <flux:button href="{{ route('due-payments.index') }}" variant="ghost" wire:navigate>
                 {{ __('View all due payments') }}
@@ -167,11 +173,17 @@
 
         <div class="flex min-h-0 flex-1 flex-col">
             <flux:card class="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+                <p class="sr-only" aria-live="polite">
+                    {{ trans_choice('{0} No due payments found|{1} :count due payment found|[2,*] :count due payments found', $duePaymentsPreview->count(), ['count' => $duePaymentsPreview->count()]) }}
+                </p>
                 @if ($duePaymentsPreview->isEmpty())
-                    <flux:subheading>{{ __('No due payments yet.') }}</flux:subheading>
+                    <flux:subheading role="status" aria-live="polite">{{ __('No due payments yet.') }}</flux:subheading>
                 @else
                     <div class="min-h-0 w-full flex-1 overflow-y-auto">
-                        <flux:table>
+                        <flux:table aria-label="{{ __('Due payments list') }}" aria-describedby="due-payments-caption">
+                            <caption id="due-payments-caption" class="sr-only">
+                                {{ __('Due payments preview showing employee, pay amount, next pay date, and actions.') }}
+                            </caption>
                             <flux:table.columns>
                                 <flux:table.column>{{ __('Employee') }}</flux:table.column>
                                 <flux:table.column>{{ __('Pay Amount') }}</flux:table.column>
@@ -225,5 +237,5 @@
                 @endif
             </flux:card>
         </div>
-    </div>
+    </main>
 </x-layouts::app>

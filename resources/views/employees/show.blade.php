@@ -1,5 +1,5 @@
 <x-layouts::app :title="__(':name - BasicEMS', ['name' => $employee->full_name])">
-    <div class="flex h-full w-full flex-1 flex-col gap-6">
+    <main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
         <div class="flex items-center gap-4">
             <flux:button
                 href="{{ route('employees.index') }}"
@@ -8,7 +8,7 @@
                 aria-label="{{ __('Back to employees') }}"
                 wire:navigate
             />
-            <flux:heading size="xl">{{ $employee->full_name }}</flux:heading>
+            <flux:heading id="page-title" size="xl">{{ $employee->full_name }}</flux:heading>
         </div>
 
         @if (session('error'))
@@ -29,11 +29,11 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <flux:button href="{{ route('employees.edit', $employee) }}" variant="ghost" icon="pencil" wire:navigate>
+                        <flux:button href="{{ route('employees.edit', $employee) }}" variant="ghost" icon="pencil" aria-label="{{ __('Edit :name', ['name' => $employee->full_name]) }}" wire:navigate>
                             {{ __('Edit') }}
                         </flux:button>
                         <flux:modal.trigger name="delete-employee">
-                            <flux:button variant="ghost" icon="trash">
+                            <flux:button variant="ghost" icon="trash" aria-label="{{ __('Delete :name', ['name' => $employee->full_name]) }}">
                                 {{ __('Delete') }}
                             </flux:button>
                         </flux:modal.trigger>
@@ -42,62 +42,68 @@
 
                 <flux:separator />
 
-                <div class="grid gap-6 sm:grid-cols-2">
+                <dl class="grid gap-6 sm:grid-cols-2">
                     <div>
-                        <flux:subheading>{{ __('First Name') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->first_name }}</flux:heading>
+                        <dt><flux:subheading>{{ __('First Name') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->first_name }}</flux:heading></dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Last Name') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->last_name }}</flux:heading>
+                        <dt><flux:subheading>{{ __('Last Name') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->last_name }}</flux:heading></dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Email Address') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->email }}</flux:heading>
+                        <dt><flux:subheading>{{ __('Email Address') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->email }}</flux:heading></dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Phone Number') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->phone_number ?? '-' }}</flux:heading>
+                        <dt><flux:subheading>{{ __('Phone Number') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->phone_number ?? '-' }}</flux:heading></dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Department') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->department ?? '-' }}</flux:heading>
+                        <dt><flux:subheading>{{ __('Department') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->department ?? '-' }}</flux:heading></dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Job Title') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->job_title ?? '-' }}</flux:heading>
+                        <dt><flux:subheading>{{ __('Job Title') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->job_title ?? '-' }}</flux:heading></dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Work In') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->work_in ?? '-' }}</flux:heading>
+                        <dt><flux:subheading>{{ __('Work In') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->work_in ?? '-' }}</flux:heading></dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Work Out') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->work_out ?? '-' }}</flux:heading>
+                        <dt><flux:subheading>{{ __('Work Out') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->work_out ?? '-' }}</flux:heading></dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Pay Day') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">
-                            {{ $employee->pay_day ? __('Every month on day :day', ['day' => $employee->pay_day]) : '-' }}
-                        </flux:heading>
+                        <dt><flux:subheading>{{ __('Pay Day') }}</flux:subheading></dt>
+                        <dd>
+                            <flux:heading size="sm" class="mt-1">
+                                {{ $employee->pay_day ? __('Every month on day :day', ['day' => $employee->pay_day]) : '-' }}
+                            </flux:heading>
+                        </dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Pay Amount (Monthly)') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">
-                            {{ number_format((float) $employee->pay_amount, 2) }}
-                        </flux:heading>
+                        <dt><flux:subheading>{{ __('Pay Amount (Monthly)') }}</flux:subheading></dt>
+                        <dd>
+                            <flux:heading size="sm" class="mt-1">
+                                {{ number_format((float) $employee->pay_amount, 2) }}
+                            </flux:heading>
+                        </dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Salary (Yearly)') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">
-                            {{ $employee->pay_salary !== null ? number_format((float) $employee->pay_salary, 2) : '-' }}
-                        </flux:heading>
+                        <dt><flux:subheading>{{ __('Salary (Yearly)') }}</flux:subheading></dt>
+                        <dd>
+                            <flux:heading size="sm" class="mt-1">
+                                {{ $employee->pay_salary !== null ? number_format((float) $employee->pay_salary, 2) : '-' }}
+                            </flux:heading>
+                        </dd>
                     </div>
                     <div>
-                        <flux:subheading>{{ __('Created') }}</flux:subheading>
-                        <flux:heading size="sm" class="mt-1">{{ $employee->created_at->format('M d, Y \a\t g:i A') }}</flux:heading>
+                        <dt><flux:subheading>{{ __('Created') }}</flux:subheading></dt>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->created_at->format('M d, Y \a\t g:i A') }}</flux:heading></dd>
                     </div>
-                </div>
+                </dl>
             </div>
         </flux:card>
 
@@ -127,5 +133,5 @@
                 </div>
             </div>
         </flux:modal>
-    </div>
+    </main>
 </x-layouts::app>

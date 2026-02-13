@@ -1,7 +1,7 @@
 <x-layouts::app :title="__('Attendance - BasicEMS')">
-	<div class="flex h-full w-full flex-1 flex-col gap-6">
+	<main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
 		<div class="flex items-center justify-between">
-			<flux:heading size="xl">{{ __('Attendance') }}</flux:heading>
+			<flux:heading id="page-title" size="xl">{{ __('Attendance') }}</flux:heading>
 		</div>
 
 		@if (session('error'))
@@ -11,27 +11,35 @@
 			</flux:callout>
 		@endif
 
-		<form method="GET" action="{{ route('attendances.index') }}" role="search" class="flex items-center gap-2">
+		<form method="GET" action="{{ route('attendances.index') }}" role="search" aria-describedby="attendance-search-help" class="flex items-center gap-2">
+			<p id="attendance-search-help" class="sr-only">
+				{{ __('Search employees to quickly find attendance schedules.') }}
+			</p>
+			<label for="attendance-search" class="sr-only">{{ __('Search employees') }}</label>
 			<flux:input
+				id="attendance-search"
 				type="search"
 				name="search"
 				placeholder="{{ __('Search employees...') }}"
 				value="{{ $search }}"
 				icon="magnifying-glass"
-				aria-label="{{ __('Search employees') }}"
 				class="max-w-xs"
 			/>
 			<flux:button type="submit">{{ __('Search') }}</flux:button>
 			@if ($search)
 				<flux:button href="{{ route('attendances.index') }}" variant="ghost" wire:navigate>
-					{{ __('Clear') }}
+					{{ __('Clear Search') }}
 				</flux:button>
 			@endif
 		</form>
 
+		<p class="sr-only" aria-live="polite">
+			{{ trans_choice('{0} No employees found|{1} :count employee found|[2,*] :count employees found', $employees->count(), ['count' => $employees->count()]) }}
+		</p>
+
 		@if ($employees->isEmpty())
-			<flux:card class="text-center">
-				<flux:icon name="clock" class="mx-auto size-12 text-zinc-400" />
+			<flux:card class="text-center" role="status" aria-live="polite">
+				<flux:icon name="clock" class="mx-auto size-12 text-zinc-400" aria-hidden="true" />
 				<flux:heading size="lg" class="mt-4">{{ __('No employee schedules found') }}</flux:heading>
 				<flux:subheading class="mt-2">
 					@if ($search)
@@ -49,7 +57,10 @@
 				@endunless
 			</flux:card>
 		@else
-			<flux:table>
+			<flux:table aria-label="{{ __('Attendance schedule list') }}" aria-describedby="attendance-table-caption">
+				<caption id="attendance-table-caption" class="sr-only">
+					{{ __('Attendance schedules showing priority, employee, work in, work out, department, and job title.') }}
+				</caption>
 				<flux:table.columns>
 					<flux:table.column>{{ __('Priority') }}</flux:table.column>
 					<flux:table.column>{{ __('Employee') }}</flux:table.column>
@@ -79,5 +90,5 @@
 				</flux:table.rows>
 			</flux:table>
 		@endif
-	</div>
+	</main>
 </x-layouts::app>

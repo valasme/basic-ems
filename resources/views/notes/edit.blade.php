@@ -1,5 +1,5 @@
 <x-layouts::app :title="__('Edit :title - BasicEMS', ['title' => $note->note_title])">
-	<div class="flex h-full w-full flex-1 flex-col gap-6">
+	<main class="flex h-full w-full flex-1 flex-col gap-6" role="main" aria-labelledby="page-title">
 		<div class="flex items-center gap-4">
 			<flux:button
 				href="{{ route('notes.index') }}"
@@ -8,7 +8,7 @@
 				aria-label="{{ __('Back to notes') }}"
 				wire:navigate
 			/>
-			<flux:heading size="xl">{{ __('Edit Note') }}</flux:heading>
+			<flux:heading id="page-title" size="xl">{{ __('Edit Note') }}</flux:heading>
 		</div>
 
 		@if (session('error'))
@@ -18,12 +18,28 @@
 			</flux:callout>
 		@endif
 
+		@if ($errors->any())
+			<flux:callout variant="danger" role="alert" aria-live="assertive">
+				<flux:heading size="sm">{{ __('Please fix the following errors') }}</flux:heading>
+				<ul class="mt-2 list-disc ps-5 text-sm">
+					@foreach ($errors->all() as $error)
+						<li>{{ $error }}</li>
+					@endforeach
+				</ul>
+			</flux:callout>
+		@endif
+
 		<flux:card class="flex-1">
-			<form method="POST" action="{{ route('notes.update', $note) }}" class="flex h-full flex-col gap-6">
+			<form method="POST" action="{{ route('notes.update', $note) }}" class="flex h-full flex-col gap-6" aria-describedby="note-form-help">
 				@csrf
 				@method('PUT')
 
-				<div class="grid flex-1 content-start auto-rows-min gap-6">
+				<p id="note-form-help" class="sr-only">
+					{{ __('Required fields must be completed before updating the note.') }}
+				</p>
+
+				<fieldset class="grid flex-1 content-start auto-rows-min gap-6">
+					<legend class="sr-only">{{ __('Note information') }}</legend>
 					<flux:field>
 						<flux:label>{{ __('Title') }}</flux:label>
 						<flux:input
@@ -32,6 +48,7 @@
 							value="{{ old('note_title', $note->note_title) }}"
 							placeholder="{{ __('Enter note title') }}"
 							required
+							aria-required="true"
 							autofocus
 						/>
 						<flux:error name="note_title" />
@@ -46,7 +63,7 @@
 						>{{ old('note_description', $note->note_description) }}</flux:textarea>
 						<flux:error name="note_description" />
 					</flux:field>
-				</div>
+				</fieldset>
 
 				<div class="mt-6 flex items-center gap-3">
 					<flux:spacer />
@@ -59,5 +76,5 @@
 				</div>
 			</form>
 		</flux:card>
-	</div>
+	</main>
 </x-layouts::app>
