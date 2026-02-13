@@ -152,6 +152,66 @@ class DashboardTest extends TestCase
         $response->assertViewHas('employeesCount', 0);
         $response->assertViewHas('tasksCount', 0);
         $response->assertViewHas('notesCount', 0);
+        $response->assertViewHas('duePaymentsPreview', fn ($employees): bool => $employees->isEmpty());
         $response->assertSee(__('Dashboard metrics are temporarily unavailable.'));
+    }
+
+    public function test_dashboard_shows_due_payments_preview_ordered_by_nearest_pay_date_and_limited_to_seven(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 2, 10));
+
+        $user = User::factory()->create();
+
+        $previewEmployees = collect([
+            ['first_name' => 'Pay', 'last_name' => 'Today', 'pay_day' => 10],
+            ['first_name' => 'Pay', 'last_name' => 'Tomorrow', 'pay_day' => 11],
+            ['first_name' => 'Pay', 'last_name' => 'SoonA', 'pay_day' => 12],
+            ['first_name' => 'Pay', 'last_name' => 'SoonB', 'pay_day' => 13],
+            ['first_name' => 'Pay', 'last_name' => 'SoonC', 'pay_day' => 14],
+            ['first_name' => 'Pay', 'last_name' => 'SoonD', 'pay_day' => 15],
+            ['first_name' => 'Pay', 'last_name' => 'SoonE', 'pay_day' => 16],
+            ['first_name' => 'Pay', 'last_name' => 'TooLate', 'pay_day' => 17],
+        ])->map(function (array $attributes) use ($user): Employee {
+            return Employee::factory()->forUser($user)->create([
+                ...$attributes,
+                'email' => fake()->unique()->safeEmail(),
+                'pay_amount' => 1000.00,
+            ]);
+        });
+
+        $otherUser = User::factory()->create();
+        $otherUserEmployee = Employee::factory()->forUser($otherUser)->create([
+            'first_name' => 'Other',
+            'last_name' => 'User',
+            'pay_day' => 10,
+            'pay_amount' => 1000.00,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Pay Today');
+        $response->assertDontSee('Pay TooLate');
+        $response->assertDontSee($otherUserEmployee->full_name);
+        $response->assertViewHas('duePaymentsPreview', function ($duePaymentsPreview): bool {
+            if ($duePaymentsPreview->count() !== 7) {
+                return false;
+            }
+
+            $days = $duePaymentsPreview
+                ->map(fn (Employee $employee): ?int => $employee->days_until_pay)
+                ->all();
+
+            if (in_array(null, $days, true)) {
+                return false;
+            }
+
+            $sortedDays = $days;
+            sort($sortedDays);
+
+            return $days === $sortedDays;
+        });
+
+        Carbon::setTestNow();
     }
 }

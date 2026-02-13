@@ -77,9 +77,14 @@
             ];
         @endphp
 
-        <div class="space-y-1">
-            <flux:heading size="lg">{{ $taskSectionTitle }}</flux:heading>
-            <flux:subheading>{{ $taskSectionSubtitle }}</flux:subheading>
+        <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1">
+                <flux:heading size="lg">{{ $taskSectionTitle }}</flux:heading>
+                <flux:subheading>{{ $taskSectionSubtitle }}</flux:subheading>
+            </div>
+            <flux:button href="{{ route('tasks.index') }}" variant="ghost" wire:navigate>
+                {{ __('View all tasks') }}
+            </flux:button>
         </div>
 
         @if ($dashboardLoadError ?? false)
@@ -146,12 +151,78 @@
                         </flux:table.rows>
                     </flux:table>
                 </div>
-                <div class="mt-4">
-                    <flux:button href="{{ route('tasks.index') }}" variant="ghost" wire:navigate>
-                        {{ __('View all tasks') }}
-                    </flux:button>
-                </div>
             @endif
+            </flux:card>
+        </div>
+
+        <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1">
+                <flux:heading size="lg">{{ __('Due payments') }}</flux:heading>
+                <flux:subheading>{{ __('Upcoming pay dates sorted by time.') }}</flux:subheading>
+            </div>
+            <flux:button href="{{ route('due-payments.index') }}" variant="ghost" wire:navigate>
+                {{ __('View all due payments') }}
+            </flux:button>
+        </div>
+
+        <div class="flex min-h-0 flex-1 flex-col">
+            <flux:card class="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+                @if ($duePaymentsPreview->isEmpty())
+                    <flux:subheading>{{ __('No due payments yet.') }}</flux:subheading>
+                @else
+                    <div class="min-h-0 w-full flex-1 overflow-y-auto">
+                        <flux:table>
+                            <flux:table.columns>
+                                <flux:table.column>{{ __('Employee') }}</flux:table.column>
+                                <flux:table.column>{{ __('Pay Amount') }}</flux:table.column>
+                                <flux:table.column>{{ __('Next Pay Date') }}</flux:table.column>
+                                <flux:table.column align="end">{{ __('Actions') }}</flux:table.column>
+                            </flux:table.columns>
+
+                            <flux:table.rows>
+                                @foreach ($duePaymentsPreview as $employee)
+                                    @php
+                                        $daysUntil = $employee->days_until_pay;
+                                        $daysLabel = $daysUntil === 0
+                                            ? __('Today')
+                                            : ($daysUntil === 1
+                                                ? __('Tomorrow')
+                                                : __('In :days days', ['days' => $daysUntil]));
+                                    @endphp
+                                    <flux:table.row :key="$employee->id">
+                                        <flux:table.cell variant="strong">
+                                            <a href="{{ route('employees.show', $employee) }}" class="hover:underline" wire:navigate>
+                                                {{ $employee->full_name }}
+                                            </a>
+                                        </flux:table.cell>
+                                        <flux:table.cell>
+                                            ${{ number_format((float) $employee->pay_amount, 2) }}
+                                        </flux:table.cell>
+                                        <flux:table.cell>
+                                            <div class="flex flex-col">
+                                                <span>{{ $employee->next_pay_date?->format('M d, Y') ?? '-' }}</span>
+                                                @if ($employee->next_pay_date && $daysUntil !== null)
+                                                    <span class="text-xs text-zinc-500">{{ $daysLabel }}</span>
+                                                @endif
+                                            </div>
+                                        </flux:table.cell>
+                                        <flux:table.cell align="end">
+                                            <flux:button
+                                                href="{{ route('employees.show', $employee) }}"
+                                                variant="ghost"
+                                                size="sm"
+                                                icon="eye"
+                                                aria-label="{{ __('View :name', ['name' => $employee->full_name]) }}"
+                                                title="{{ __('View') }}"
+                                                wire:navigate
+                                            />
+                                        </flux:table.cell>
+                                    </flux:table.row>
+                                @endforeach
+                            </flux:table.rows>
+                        </flux:table>
+                    </div>
+                @endif
             </flux:card>
         </div>
     </div>

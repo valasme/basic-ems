@@ -38,9 +38,10 @@ BasicEMS is a lightweight employee management system built for very small busine
 - Employee directory with contact info, department, job title, and work times.
 - Attendance tracking with daily employee records.
 - Task management with status, due date, and employee assignment.
+- Critical tasks view to highlight the most important open tasks using filter modes.
 - Notes system with title and optional description.
 - Due payments tracking with upcoming pay dates and urgency cues.
-- Search across employees, attendance, tasks, and notes.
+- Search across employees, attendance, tasks, critical tasks, and notes.
 - Authentication with Fortify, including optional two-factor settings.
 - Per-user ownership and policies to keep data scoped to the signed-in user.
 - Improved code quality and stronger error handling for better reliability.
@@ -122,7 +123,16 @@ Seeding creates a test user (test@example.com) and sample employees, attendance 
 ## Status Values
 
 - Task statuses: pending, in_progress, completed.
+- Task priorities: urgent, high, medium, low, none.
 - Due payment statuses: pending, paid.
+
+## Critical Tasks
+
+- Route: `/critical-tasks` (auth + verified users).
+- Filter modes:
+    - `Time Remaining + Priority` (default): sorts by closest due date first, then priority.
+    - `Priority Only`: sorts by priority first, then due date.
+- Supports search by task title and employee name, with a clear action to reset search/filter.
 
 ## Testing
 

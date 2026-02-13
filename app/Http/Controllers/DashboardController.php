@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class DashboardController extends Controller
             $user->loadCount(['employees', 'tasks', 'notes']);
 
             [$priorityTasks, $isShowingFallbackTasks] = $this->resolvePriorityTasks($user->id);
+            $duePaymentsPreview = $this->resolveDuePaymentsPreview($user->id);
 
             return view('dashboard', [
                 'employeesCount' => $user->employees_count,
@@ -29,6 +31,7 @@ class DashboardController extends Controller
                 'notesCount' => $user->notes_count,
                 'priorityTasks' => $priorityTasks,
                 'isShowingFallbackTasks' => $isShowingFallbackTasks,
+                'duePaymentsPreview' => $duePaymentsPreview,
                 'dashboardLoadError' => false,
             ]);
         } catch (Throwable $exception) {
@@ -40,6 +43,7 @@ class DashboardController extends Controller
                 'notesCount' => 0,
                 'priorityTasks' => collect(),
                 'isShowingFallbackTasks' => false,
+                'duePaymentsPreview' => collect(),
                 'dashboardLoadError' => true,
             ]);
         }
@@ -89,5 +93,22 @@ class DashboardController extends Controller
             ->get();
 
         return [$fallbackTasks, true];
+    }
+
+    /**
+     * Resolve due payments preview sorted by nearest pay date.
+     *
+     * @return Collection<int, Employee>
+     */
+    private function resolveDuePaymentsPreview(int $userId): Collection
+    {
+        return Employee::query()
+            ->select(['id', 'user_id', 'first_name', 'last_name', 'pay_day', 'pay_amount'])
+            ->where('user_id', $userId)
+            ->withPayDay()
+            ->get()
+            ->sortBy(fn (Employee $employee): int => $employee->days_until_pay ?? PHP_INT_MAX)
+            ->take(7)
+            ->values();
     }
 }

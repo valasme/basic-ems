@@ -21,6 +21,9 @@
                     <flux:sidebar.item icon="check-circle" :href="route('tasks.index')" :current="request()->routeIs('tasks.*')" wire:navigate>
                         {{ __('Tasks') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="exclamation-triangle" :href="route('critical-tasks.index')" :current="request()->routeIs('critical-tasks.*')" wire:navigate>
+                        {{ __('Critical Tasks') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="clock" :href="route('attendances.index')" :current="request()->routeIs('attendances.*')" wire:navigate>
                         {{ __('Attendance') }}
                     </flux:sidebar.item>
