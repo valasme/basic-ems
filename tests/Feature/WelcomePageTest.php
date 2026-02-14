@@ -12,6 +12,6 @@ class WelcomePageTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('BasicEMS');
-        $response->assertSee('Employee directory');
+        $response->assertSee('Modern EMS');
     }
 }
