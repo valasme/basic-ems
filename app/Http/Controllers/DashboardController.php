@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Task;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\View\View;
 use Throwable;
 
 class DashboardController extends Controller

@@ -89,6 +89,7 @@ class StoreTaskRequest extends FormRequest
             'priority.in' => 'The selected task priority is invalid.',
             'description.max' => 'The description may not be greater than 2000 characters.',
             'due_date.date' => 'Please provide a valid due date.',
+            'due_date.date_format' => 'The due date must be in YYYY-MM-DD format.',
         ];
     }
 }

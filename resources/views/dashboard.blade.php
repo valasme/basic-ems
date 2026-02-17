@@ -208,7 +208,7 @@
                                             </a>
                                         </flux:table.cell>
                                         <flux:table.cell>
-                                            ${{ number_format((float) $employee->pay_amount, 2) }}
+                                            {{ $employee->pay_amount !== null ? '$' . number_format((float) $employee->pay_amount, 2) : '-' }}
                                         </flux:table.cell>
                                         <flux:table.cell>
                                             <div class="flex flex-col">

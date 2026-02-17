@@ -6,7 +6,6 @@ use App\Models\DuePayment;
 use App\Models\Employee;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Throwable;
 
 class DuePaymentController extends Controller
@@ -22,12 +21,10 @@ class DuePaymentController extends Controller
         $search = $request->query('search');
         $user = $request->user();
 
-        /** @var Collection<int, Employee> $employees */
         $employees = collect();
 
         try {
-            /** @var Collection<int, Employee> $loadedEmployees */
-            $loadedEmployees = $user
+            $employees = $user
                 ->employees()
                 ->select(['id', 'user_id', 'first_name', 'last_name', 'pay_day', 'pay_amount', 'job_title'])
                 ->withPayDay()
@@ -35,8 +32,6 @@ class DuePaymentController extends Controller
                 ->get()
                 ->sortBy(fn (Employee $employee): int => $employee->days_until_pay ?? PHP_INT_MAX)
                 ->values();
-
-            $employees = $loadedEmployees;
         } catch (Throwable $exception) {
             report($exception);
 

@@ -70,6 +70,7 @@ class UpdateDuePaymentRequest extends FormRequest
             'notes.max' => 'The notes may not be greater than 2000 characters.',
             'pay_date.required' => 'The pay date is required.',
             'pay_date.date' => 'Please provide a valid pay date.',
+            'pay_date.date_format' => 'The pay date must be in YYYY-MM-DD format.',
         ];
     }
 }

@@ -36,10 +36,6 @@ class TaskFactory extends Factory
         return [
             'employee_id' => Employee::factory(),
             'user_id' => function (array $attributes): int|User {
-                if (array_key_exists('user_id', $attributes) && $attributes['user_id'] !== null) {
-                    return $attributes['user_id'];
-                }
-
                 if (! empty($attributes['employee_id'])) {
                     return Employee::query()
                         ->select(['user_id'])

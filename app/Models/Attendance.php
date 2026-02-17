@@ -102,18 +102,24 @@ class Attendance extends Model
         $words = explode(' ', $searchTerm);
 
         return $query->where(function (Builder $subQuery) use ($words, $searchTerm): void {
-            $subQuery->where('attendances.note', 'like', "%{$searchTerm}%")
+            $escapedTerm = str_replace(['%', '_'], ['\%', '\_'], $searchTerm);
+
+            $subQuery->where('attendances.note', 'like', "%{$escapedTerm}%")
                 ->orWhereHas('employee', function (Builder $employeeQuery) use ($words, $searchTerm): void {
                     foreach ($words as $word) {
+                        $escaped = str_replace(['%', '_'], ['\%', '\_'], $word);
+
                         $employeeQuery->where(fn (Builder $q): Builder => $q
-                            ->where('first_name', 'like', "%{$word}%")
-                            ->orWhere('last_name', 'like', "%{$word}%")
+                            ->where('first_name', 'like', "%{$escaped}%")
+                            ->orWhere('last_name', 'like', "%{$escaped}%")
                         );
                     }
 
+                    $escapedFullName = str_replace(['%', '_'], ['\%', '\_'], mb_strtolower($searchTerm));
+
                     $employeeQuery->orWhereRaw(
                         "LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?",
-                        ['%'.mb_strtolower($searchTerm).'%']
+                        ["%{$escapedFullName}%"]
                     );
                 });
         });

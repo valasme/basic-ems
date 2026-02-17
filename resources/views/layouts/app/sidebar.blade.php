@@ -18,6 +18,9 @@
                     <flux:sidebar.item icon="users" :href="route('employees.index')" :current="request()->routeIs('employees.*')" wire:navigate>
                         {{ __('Employees') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="building-office-2" :href="route('departments.index')" :current="request()->routeIs('departments.*')" wire:navigate>
+                        {{ __('Departments') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="check-circle" :href="route('tasks.index')" :current="request()->routeIs('tasks.*')" wire:navigate>
                         {{ __('Tasks') }}
                     </flux:sidebar.item>

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Employees;
 
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,10 +46,13 @@ class EmployeeManagementTest extends TestCase
     public function test_index_lists_only_owned_employees_and_supports_search(): void
     {
         $user = User::factory()->create();
+        $department = Department::factory()->forUser($user)->named('Engineering')->create();
+
         $owned = Employee::factory()
             ->forUser($user)
             ->withName('Ava', 'Stone')
             ->withEmail('ava@example.com')
+            ->forDepartment($department)
             ->create();
 
         $otherUser = User::factory()->create();
@@ -72,11 +76,20 @@ class EmployeeManagementTest extends TestCase
         $fullNameSearch->assertOk();
         $fullNameSearch->assertSee($owned->full_name);
         $fullNameSearch->assertDontSee($other->full_name);
+
+        $departmentSearch = $this->actingAs($user)->get(route('employees.index', ['search' => 'Engineering']));
+        $departmentSearch->assertOk();
+        $departmentSearch->assertSee($owned->full_name);
+        $departmentSearch->assertDontSee($other->full_name);
     }
 
     public function test_index_supports_filter_dropdown_ordering_modes(): void
     {
         $user = User::factory()->create();
+
+        $sales = Department::factory()->forUser($user)->named('Sales')->create();
+        $engineering = Department::factory()->forUser($user)->named('Engineering')->create();
+        $marketing = Department::factory()->forUser($user)->named('Marketing')->create();
 
         $employeeA = Employee::factory()
             ->forUser($user)
@@ -84,7 +97,7 @@ class EmployeeManagementTest extends TestCase
                 'first_name' => 'Zoe',
                 'last_name' => 'Alpha',
                 'email' => 'c@example.com',
-                'department' => 'Sales',
+                'department_id' => $sales->id,
                 'job_title' => 'Coordinator',
                 'pay_amount' => '2000.00',
                 'created_at' => now()->subDays(3),
@@ -96,7 +109,7 @@ class EmployeeManagementTest extends TestCase
                 'first_name' => 'Ava',
                 'last_name' => 'Zulu',
                 'email' => 'a@example.com',
-                'department' => 'Engineering',
+                'department_id' => $engineering->id,
                 'job_title' => 'Analyst',
                 'pay_amount' => '2500.00',
                 'created_at' => now()->subDays(2),
@@ -108,7 +121,7 @@ class EmployeeManagementTest extends TestCase
                 'first_name' => 'Liam',
                 'last_name' => 'Beta',
                 'email' => 'b@example.com',
-                'department' => 'Marketing',
+                'department_id' => $marketing->id,
                 'job_title' => 'Manager',
                 'pay_amount' => '1500.00',
                 'created_at' => now()->subDay(),
@@ -336,6 +349,7 @@ class EmployeeManagementTest extends TestCase
     public function test_user_can_create_employee_with_normalized_fields(): void
     {
         $user = User::factory()->create();
+        $department = Department::factory()->forUser($user)->named('Operations')->create();
 
         $response = $this->actingAs($user)->post(route('employees.store'), [
             'first_name' => '  Ava ',
@@ -347,7 +361,7 @@ class EmployeeManagementTest extends TestCase
             'pay_day' => 15,
             'pay_amount' => '1750.50',
             'job_title' => '  Coordinator ',
-            'department' => '  Operations ',
+            'department_id' => (string) $department->id,
         ]);
 
         $response->assertRedirect(route('employees.index'));
@@ -364,7 +378,7 @@ class EmployeeManagementTest extends TestCase
             'pay_amount' => '1750.50',
             'pay_salary' => '21006.00',
             'job_title' => 'Coordinator',
-            'department' => 'Operations',
+            'department_id' => $department->id,
         ]);
     }
 
@@ -423,17 +437,72 @@ class EmployeeManagementTest extends TestCase
         $response->assertSessionHasErrors(['work_in', 'work_out', 'pay_day', 'pay_amount']);
     }
 
+    public function test_store_validation_rejects_department_not_owned_by_user(): void
+    {
+        $user = User::factory()->create();
+        $otherUserDepartment = Department::factory()->forUser(User::factory()->create())->create();
+
+        $response = $this->actingAs($user)->post(route('employees.store'), [
+            'first_name' => 'Taylor',
+            'last_name' => 'Morgan',
+            'email' => 'taylor@example.com',
+            'department_id' => (string) $otherUserDepartment->id,
+        ]);
+
+        $response->assertSessionHasErrors(['department_id']);
+    }
+
     public function test_user_can_view_and_edit_their_employee(): void
     {
         $user = User::factory()->create();
-        $employee = Employee::factory()->forUser($user)->create();
+        $department = Department::factory()->forUser($user)->named('Engineering')->create();
+        $employee = Employee::factory()->forUser($user)->forDepartment($department)->create();
 
         $showResponse = $this->actingAs($user)->get(route('employees.show', $employee));
         $showResponse->assertOk();
         $showResponse->assertSee($employee->full_name);
+        $showResponse->assertSee('Engineering');
 
         $editResponse = $this->actingAs($user)->get(route('employees.edit', $employee));
         $editResponse->assertOk();
+    }
+
+    public function test_show_page_displays_unassigned_when_no_department(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create(['department_id' => null]);
+
+        $response = $this->actingAs($user)->get(route('employees.show', $employee));
+
+        $response->assertOk();
+        $response->assertSee($employee->full_name);
+    }
+
+    public function test_create_page_shows_user_departments_in_dropdown(): void
+    {
+        $user = User::factory()->create();
+        $department = Department::factory()->forUser($user)->named('Marketing')->create();
+        $otherDepartment = Department::factory()->forUser(User::factory()->create())->named('Secret Dept')->create();
+
+        $response = $this->actingAs($user)->get(route('employees.create'));
+
+        $response->assertOk();
+        $response->assertSee('Marketing');
+        $response->assertDontSee('Secret Dept');
+    }
+
+    public function test_edit_page_shows_user_departments_in_dropdown(): void
+    {
+        $user = User::factory()->create();
+        $department = Department::factory()->forUser($user)->named('Sales')->create();
+        $employee = Employee::factory()->forUser($user)->forDepartment($department)->create();
+        $otherDepartment = Department::factory()->forUser(User::factory()->create())->named('Hidden Dept')->create();
+
+        $response = $this->actingAs($user)->get(route('employees.edit', $employee));
+
+        $response->assertOk();
+        $response->assertSee('Sales');
+        $response->assertDontSee('Hidden Dept');
     }
 
     public function test_edit_page_displays_flashed_error_message(): void
@@ -466,6 +535,7 @@ class EmployeeManagementTest extends TestCase
     public function test_user_can_update_their_employee(): void
     {
         $user = User::factory()->create();
+        $department = Department::factory()->forUser($user)->named('Finance')->create();
         $employee = Employee::factory()->forUser($user)->withEmail('original@example.com')->create();
 
         $response = $this->actingAs($user)->put(route('employees.update', $employee), [
@@ -478,7 +548,7 @@ class EmployeeManagementTest extends TestCase
             'pay_day' => 20,
             'pay_amount' => '1900.00',
             'job_title' => 'Analyst',
-            'department' => 'Finance',
+            'department_id' => (string) $department->id,
         ]);
 
         $response->assertRedirect(route('employees.index'));
@@ -489,16 +559,76 @@ class EmployeeManagementTest extends TestCase
             'last_name' => 'Ray',
             'email' => 'original@example.com',
             'job_title' => 'Analyst',
-            'department' => 'Finance',
+            'department_id' => $department->id,
             'pay_day' => 20,
             'pay_amount' => '1900.00',
             'pay_salary' => '22800.00',
         ]);
     }
 
+    public function test_user_can_update_employee_department_assignment(): void
+    {
+        $user = User::factory()->create();
+        $oldDepartment = Department::factory()->forUser($user)->named('Sales')->create();
+        $newDepartment = Department::factory()->forUser($user)->named('Engineering')->create();
+        $employee = Employee::factory()->forUser($user)->forDepartment($oldDepartment)->create();
+
+        $response = $this->actingAs($user)->put(route('employees.update', $employee), [
+            'first_name' => $employee->first_name,
+            'last_name' => $employee->last_name,
+            'email' => $employee->email,
+            'department_id' => (string) $newDepartment->id,
+        ]);
+
+        $response->assertRedirect(route('employees.index'));
+
+        $this->assertDatabaseHas('employees', [
+            'id' => $employee->id,
+            'department_id' => $newDepartment->id,
+        ]);
+    }
+
+    public function test_user_can_clear_employee_department_on_update(): void
+    {
+        $user = User::factory()->create();
+        $department = Department::factory()->forUser($user)->named('Engineering')->create();
+        $employee = Employee::factory()->forUser($user)->forDepartment($department)->create();
+
+        $response = $this->actingAs($user)->put(route('employees.update', $employee), [
+            'first_name' => $employee->first_name,
+            'last_name' => $employee->last_name,
+            'email' => $employee->email,
+            'department_id' => '',
+        ]);
+
+        $response->assertRedirect(route('employees.index'));
+
+        $this->assertDatabaseHas('employees', [
+            'id' => $employee->id,
+            'department_id' => null,
+        ]);
+    }
+
+    public function test_update_validation_rejects_department_not_owned_by_user(): void
+    {
+        $user = User::factory()->create();
+        $employee = Employee::factory()->forUser($user)->create();
+        $otherUserDepartment = Department::factory()->forUser(User::factory()->create())->create();
+
+        $response = $this->actingAs($user)->put(route('employees.update', $employee), [
+            'first_name' => $employee->first_name,
+            'last_name' => $employee->last_name,
+            'email' => $employee->email,
+            'department_id' => (string) $otherUserDepartment->id,
+        ]);
+
+        $response->assertSessionHasErrors(['department_id']);
+    }
+
     public function test_user_can_update_employee_with_normalized_fields(): void
     {
         $user = User::factory()->create();
+        $department = Department::factory()->forUser($user)->named('People Ops')->create();
         $employee = Employee::factory()->forUser($user)->withEmail('before@example.com')->create();
 
         $response = $this->actingAs($user)->put(route('employees.update', $employee), [
@@ -509,7 +639,7 @@ class EmployeeManagementTest extends TestCase
             'work_in' => '08:00',
             'work_out' => '16:00',
             'job_title' => '  Manager ',
-            'department' => '  People Ops ',
+            'department_id' => (string) $department->id,
         ]);
 
         $response->assertRedirect(route('employees.index'));
@@ -521,7 +651,7 @@ class EmployeeManagementTest extends TestCase
             'email' => 'jamie.ray@example.com',
             'phone_number' => '555 777 3333',
             'job_title' => 'Manager',
-            'department' => 'People Ops',
+            'department_id' => $department->id,
         ]);
     }
 

@@ -140,7 +140,7 @@
                                 </a>
                             </flux:table.cell>
                             <flux:table.cell>{{ $employee->email }}</flux:table.cell>
-                            <flux:table.cell>{{ $employee->department ?? '-' }}</flux:table.cell>
+                            <flux:table.cell>{{ $employee->department?->name ?? '-' }}</flux:table.cell>
                             <flux:table.cell>{{ $employee->job_title ?? '-' }}</flux:table.cell>
                             <flux:table.cell align="end">
                                 <div class="flex items-center justify-end gap-1">

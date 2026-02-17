@@ -75,7 +75,7 @@
 							{{ __('Edit') }}
 						</flux:button>
 						<flux:modal.trigger name="delete-task">
-						<flux:button variant="ghost" icon="trash" aria-label="{{ __('Delete :title', ['title' => $task->title]) }}">
+							<flux:button variant="ghost" icon="trash" aria-label="{{ __('Delete :title', ['title' => $task->title]) }}">
 								{{ __('Delete') }}
 							</flux:button>
 						</flux:modal.trigger>

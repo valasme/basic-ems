@@ -74,6 +74,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the departments owned by the user.
+     *
+     * @return HasMany<Department, $this>
+     */
+    public function departments(): HasMany
+    {
+        return $this->hasMany(Department::class);
+    }
+
+    /**
      * Get the tasks owned by the user.
      *
      * @return HasMany<Task, $this>

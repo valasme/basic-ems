@@ -5,10 +5,24 @@
 		</div>
 
 		@if (session('error'))
-			<flux:callout variant="danger" role="alert" aria-live="assertive">
-				<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
-				<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
-			</flux:callout>
+			<div x-data="{ open: true }" x-show="open">
+				<flux:callout variant="danger" role="alert" aria-live="assertive">
+					<div class="flex items-start gap-4">
+						<div class="min-w-0 flex-1">
+							<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
+							<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
+						</div>
+						<flux:button
+							variant="ghost"
+							size="sm"
+							icon="x-mark"
+							class="shrink-0"
+							x-on:click="open = false"
+							aria-label="{{ __('Dismiss notification') }}"
+						/>
+					</div>
+				</flux:callout>
+			</div>
 		@endif
 
 		<form method="GET" action="{{ route('attendances.index') }}" role="search" aria-describedby="attendance-search-help" class="flex items-center gap-2">
@@ -83,7 +97,7 @@
 							</flux:table.cell>
 							<flux:table.cell>{{ $employee->work_in ?? '-' }}</flux:table.cell>
 							<flux:table.cell>{{ $employee->work_out ?? '-' }}</flux:table.cell>
-							<flux:table.cell>{{ $employee->department ?? '-' }}</flux:table.cell>
+							<flux:table.cell>{{ $employee->department?->name ?? '-' }}</flux:table.cell>
 							<flux:table.cell>{{ $employee->job_title ?? '-' }}</flux:table.cell>
 						</flux:table.row>
 					@endforeach

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\CriticalTaskController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DuePaymentController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\NoteController;
@@ -18,6 +19,7 @@ Route::get('dashboard', DashboardController::class)
     ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('departments', DepartmentController::class);
     Route::resource('employees', EmployeeController::class);
     Route::resource('tasks', TaskController::class);
     Route::get('critical-tasks', [CriticalTaskController::class, 'index'])->name('critical-tasks.index');

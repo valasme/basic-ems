@@ -100,7 +100,7 @@ class UpdateAttendanceRequest extends FormRequest
             'employee_id.exists' => 'The selected employee is invalid.',
             'attendance_date.required' => 'The attendance date is required.',
             'attendance_date.date' => 'Please provide a valid attendance date.',
-            'attendance_date.unique' => 'This employee already has attendance recorded for that date.',
+            'attendance_date.date_format' => 'The attendance date must be in YYYY-MM-DD format.',
             'work_in.required' => 'The work in time is required.',
             'work_in.date_format' => 'The work in time must be in HH:MM format.',
             'work_out.date_format' => 'The work out time must be in HH:MM format.',

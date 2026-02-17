@@ -59,10 +59,12 @@ class Note extends Model
             return $query;
         }
 
+        $escaped = str_replace(['%', '_'], ['\%', '\_'], $searchTerm);
+
         return $query->where(
             fn (Builder $subQuery): Builder => $subQuery
-                ->where('note_title', 'like', "%{$searchTerm}%")
-                ->orWhere('note_description', 'like', "%{$searchTerm}%")
+                ->where('note_title', 'like', "%{$escaped}%")
+                ->orWhere('note_description', 'like', "%{$escaped}%")
         );
     }
 

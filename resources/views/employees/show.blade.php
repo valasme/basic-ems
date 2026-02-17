@@ -61,7 +61,7 @@
                     </div>
                     <div>
                         <dt><flux:subheading>{{ __('Department') }}</flux:subheading></dt>
-                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->department ?? '-' }}</flux:heading></dd>
+                        <dd><flux:heading size="sm" class="mt-1">{{ $employee->department?->name ?? '-' }}</flux:heading></dd>
                     </div>
                     <div>
                         <dt><flux:subheading>{{ __('Job Title') }}</flux:subheading></dt>
@@ -87,7 +87,7 @@
                         <dt><flux:subheading>{{ __('Pay Amount (Monthly)') }}</flux:subheading></dt>
                         <dd>
                             <flux:heading size="sm" class="mt-1">
-                                {{ number_format((float) $employee->pay_amount, 2) }}
+                                {{ $employee->pay_amount !== null ? number_format((float) $employee->pay_amount, 2) : '-' }}
                             </flux:heading>
                         </dd>
                     </div>

@@ -35,15 +35,23 @@ class EmployeeSeeder extends Seeder
         $users->each(function (User $user): void {
             $existingEmployeesCount = $user->employees()->count();
             $employeesToCreate = max(0, self::EMPLOYEES_PER_USER - $existingEmployeesCount);
+            $departmentIds = $user->departments()->pluck('id');
 
             if ($employeesToCreate === 0) {
                 return;
             }
 
-            Employee::factory()
+            $employeeFactory = Employee::factory()
                 ->count($employeesToCreate)
-                ->forUser($user)
-                ->create();
+                ->forUser($user);
+
+            if ($departmentIds->isNotEmpty()) {
+                $employeeFactory = $employeeFactory->state(fn (): array => [
+                    'department_id' => $departmentIds->random(),
+                ]);
+            }
+
+            $employeeFactory->create();
         });
     }
 }

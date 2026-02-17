@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Throwable;
 
 class AttendanceController extends Controller
@@ -21,22 +20,19 @@ class AttendanceController extends Controller
         $search = $request->query('search');
         $user = $request->user();
 
-        /** @var Collection<int, Employee> $employees */
         $employees = collect();
 
         try {
-            /** @var Collection<int, Employee> $loadedEmployees */
-            $loadedEmployees = $user
+            $employees = $user
                 ->employees()
-                ->select(['id', 'user_id', 'first_name', 'last_name', 'work_in', 'work_out', 'department', 'job_title'])
+                ->select(['id', 'user_id', 'department_id', 'first_name', 'last_name', 'work_in', 'work_out', 'job_title'])
+                ->with('department:id,name')
                 ->search($search)
                 ->get()
                 ->sortBy(function (Employee $employee): string {
                     return $employee->work_in ?? '99:99';
                 })
                 ->values();
-
-            $employees = $loadedEmployees;
         } catch (Throwable $exception) {
             report($exception);
 

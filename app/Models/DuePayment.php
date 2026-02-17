@@ -150,21 +150,26 @@ class DuePayment extends Model
         }
 
         $words = explode(' ', $searchTerm);
+        $escapedTerm = str_replace(['%', '_'], ['\%', '\_'], $searchTerm);
 
         return $query->where(
             fn (Builder $subQuery): Builder => $subQuery
-                ->where('notes', 'like', "%{$searchTerm}%")
+                ->where('notes', 'like', "%{$escapedTerm}%")
                 ->orWhereHas('employee', function (Builder $employeeQuery) use ($words, $searchTerm): void {
                     foreach ($words as $word) {
+                        $escaped = str_replace(['%', '_'], ['\%', '\_'], $word);
+
                         $employeeQuery->where(fn (Builder $q): Builder => $q
-                            ->where('first_name', 'like', "%{$word}%")
-                            ->orWhere('last_name', 'like', "%{$word}%")
+                            ->where('first_name', 'like', "%{$escaped}%")
+                            ->orWhere('last_name', 'like', "%{$escaped}%")
                         );
                     }
 
+                    $escapedFullName = str_replace(['%', '_'], ['\%', '\_'], mb_strtolower($searchTerm));
+
                     $employeeQuery->orWhereRaw(
                         "LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?",
-                        ['%'.mb_strtolower($searchTerm).'%']
+                        ["%{$escapedFullName}%"]
                     );
                 })
         );

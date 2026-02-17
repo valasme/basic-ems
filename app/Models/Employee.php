@@ -24,11 +24,12 @@ use Illuminate\Support\Str;
  * @property string $pay_amount
  * @property string|null $pay_salary
  * @property string|null $job_title
- * @property string|null $department
+ * @property int|null $department_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property-read string $full_name
  * @property-read User $user
+ * @property-read Department|null $department
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Task> $tasks
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Attendance> $attendances
  */
@@ -53,7 +54,7 @@ class Employee extends Model
         'pay_day',
         'pay_amount',
         'job_title',
-        'department',
+        'department_id',
     ];
 
     /**
@@ -64,6 +65,16 @@ class Employee extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the department assigned to the employee.
+     *
+     * @return BelongsTo<Department, $this>
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     /**
@@ -142,19 +153,24 @@ class Employee extends Model
         $words = explode(' ', $searchTerm);
 
         return $query->where(function (Builder $subQuery) use ($words, $searchTerm): void {
-            // Match each word against first_name, last_name, or email
             foreach ($words as $word) {
+                $escaped = str_replace(['%', '_'], ['\\%', '\\_'], $word);
+
                 $subQuery->where(fn (Builder $q): Builder => $q
-                    ->where('first_name', 'like', "%{$word}%")
-                    ->orWhere('last_name', 'like', "%{$word}%")
-                    ->orWhere('email', 'like', "%{$word}%")
+                    ->where('first_name', 'like', "%{$escaped}%")
+                    ->orWhere('last_name', 'like', "%{$escaped}%")
+                    ->orWhere('email', 'like', "%{$escaped}%")
+                    ->orWhereHas('department', fn (Builder $departmentQuery): Builder => $departmentQuery
+                        ->where('name', 'like', "%{$escaped}%")
+                    )
                 );
             }
 
-            // Also allow exact full name match via concatenation (database-agnostic)
+            $escapedFullName = str_replace(['%', '_'], ['\\%', '\\_'], mb_strtolower($searchTerm));
+
             $subQuery->orWhereRaw(
                 "LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?",
-                ['%'.mb_strtolower($searchTerm).'%']
+                ["%{$escapedFullName}%"]
             );
         });
     }
@@ -227,10 +243,6 @@ class Employee extends Model
 
         if ($days === null) {
             return 'none';
-        }
-
-        if ($days <= 0) {
-            return 'urgent';
         }
 
         if ($days <= 1) {

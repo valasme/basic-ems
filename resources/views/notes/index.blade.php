@@ -34,10 +34,24 @@
 		@endif
 
 		@if (session('error'))
-			<flux:callout variant="danger" role="alert" aria-live="assertive">
-				<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
-				<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
-			</flux:callout>
+			<div x-data="{ open: true }" x-show="open">
+				<flux:callout variant="danger" role="alert" aria-live="assertive">
+					<div class="flex items-start gap-4">
+						<div class="min-w-0 flex-1">
+							<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
+							<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
+						</div>
+						<flux:button
+							variant="ghost"
+							size="sm"
+							icon="x-mark"
+							class="shrink-0"
+							x-on:click="open = false"
+							aria-label="{{ __('Dismiss notification') }}"
+						/>
+					</div>
+				</flux:callout>
+			</div>
 		@endif
 
 		<form method="GET" action="{{ route('notes.index') }}" role="search" aria-describedby="notes-search-help" class="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -119,7 +133,7 @@
 								</a>
 							</flux:table.cell>
 							<flux:table.cell class="max-w-xs truncate">
-								{{ Str::limit($note->note_description, 50) ?? '-' }}
+								{{ $note->note_description ? Str::limit($note->note_description, 50) : '-' }}
 							</flux:table.cell>
 							<flux:table.cell>{{ $note->created_at->format('M d, Y') }}</flux:table.cell>
 							<flux:table.cell align="end">

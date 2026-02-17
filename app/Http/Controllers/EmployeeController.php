@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
+use App\Models\Department;
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -124,6 +126,7 @@ class EmployeeController extends Controller
         $employees = $this->applyFilter(
             $request->user()
                 ->employees()
+                ->with('department:id,name')
                 ->search($search),
             $filter
         )
@@ -158,8 +161,8 @@ class EmployeeController extends Controller
     /**
      * Apply ordering strategy based on selected filter mode.
      *
-     * @param  Builder<Employee>|HasMany<Employee, $this>  $query
-     * @return Builder<Employee>|HasMany<Employee, $this>
+     * @param  Builder<Employee>|HasMany<Employee, User>  $query
+     * @return Builder<Employee>|HasMany<Employee, User>
      */
     private function applyFilter(Builder|HasMany $query, string $filter): Builder|HasMany
     {
@@ -168,13 +171,13 @@ class EmployeeController extends Controller
             'email_alpha' => $query->orderBy('email')->orderBy('first_name')->orderBy('last_name'),
             'email_reverse' => $query->orderByDesc('email')->orderByDesc('first_name')->orderByDesc('last_name'),
             'department_alpha' => $query
-                ->orderByRaw('CASE WHEN department IS NULL OR department = "" THEN 1 ELSE 0 END')
-                ->orderBy('department')
+                ->orderByRaw('CASE WHEN department_id IS NULL THEN 1 ELSE 0 END')
+                ->orderBy($this->departmentNameSubquery())
                 ->orderBy('first_name')
                 ->orderBy('last_name'),
             'department_reverse' => $query
-                ->orderByRaw('CASE WHEN department IS NULL OR department = "" THEN 1 ELSE 0 END')
-                ->orderByDesc('department')
+                ->orderByRaw('CASE WHEN department_id IS NULL THEN 1 ELSE 0 END')
+                ->orderByDesc($this->departmentNameSubquery())
                 ->orderBy('first_name')
                 ->orderBy('last_name'),
             'job_title_alpha' => $query
@@ -202,13 +205,29 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Build the reusable department name ordering subquery.
+     */
+    private function departmentNameSubquery(): Builder
+    {
+        return Department::query()
+            ->select('name')
+            ->whereColumn('departments.id', 'employees.department_id')
+            ->limit(1);
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->authorize('create', Employee::class);
 
-        return view('employees.create');
+        $departments = $request->user()
+            ->departments()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('employees.create', compact('departments'));
     }
 
     /**
@@ -238,17 +257,26 @@ class EmployeeController extends Controller
     {
         $this->authorize('view', $employee);
 
+        $employee->load('department:id,name');
+
         return view('employees.show', compact('employee'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Employee $employee): View
+    public function edit(Request $request, Employee $employee): View
     {
         $this->authorize('update', $employee);
 
-        return view('employees.edit', compact('employee'));
+        $departments = $request->user()
+            ->departments()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $employee->load('department:id,name');
+
+        return view('employees.edit', compact('employee', 'departments'));
     }
 
     /**

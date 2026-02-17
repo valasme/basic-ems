@@ -42,9 +42,13 @@ class UpdateEmployeeRequest extends FormRequest
             'work_in' => ['nullable', 'date_format:H:i'],
             'work_out' => ['nullable', 'date_format:H:i'],
             'pay_day' => ['nullable', 'integer', 'min:1', 'max:31'],
-            'pay_amount' => ['nullable', 'numeric', 'min:0'],
+            'pay_amount' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'department_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('departments', 'id')->where(fn ($query) => $query->where('user_id', $this->user()->id)),
+            ],
             'job_title' => ['nullable', 'string', 'max:255'],
-            'department' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -70,8 +74,8 @@ class UpdateEmployeeRequest extends FormRequest
             'job_title' => $this->input('job_title')
                 ? Str::of((string) $this->input('job_title'))->squish()->toString()
                 : null,
-            'department' => $this->input('department')
-                ? Str::of((string) $this->input('department'))->squish()->toString()
+            'department_id' => $this->input('department_id')
+                ? (int) $this->input('department_id')
                 : null,
         ]);
     }
@@ -103,8 +107,10 @@ class UpdateEmployeeRequest extends FormRequest
             'pay_day.max' => 'The pay day may not be greater than 31 (day of month).',
             'pay_amount.numeric' => 'The pay amount must be a number.',
             'pay_amount.min' => 'The pay amount must be at least 0.',
+            'pay_amount.max' => 'The pay amount must not exceed 99,999,999.99.',
+            'department_id.integer' => 'Please choose a valid department.',
+            'department_id.exists' => 'Please choose a department from your list.',
             'job_title.max' => 'The job title may not be greater than 255 characters.',
-            'department.max' => 'The department may not be greater than 255 characters.',
         ];
     }
 }

@@ -98,14 +98,18 @@
 
                     <flux:field>
                         <flux:label>{{ __('Department') }}</flux:label>
-                        <flux:input
-                            type="text"
-                            name="department"
-                            value="{{ old('department', $employee->department) }}"
-                            placeholder="{{ __('Enter department') }}"
-                            autocomplete="organization"
-                        />
-                        <flux:error name="department" />
+                        <flux:select name="department_id" aria-label="{{ __('Department') }}">
+                            <option value="">{{ __('Select department') }}</option>
+                            @foreach ($departments as $department)
+                                <option
+                                    value="{{ $department->id }}"
+                                    @selected((string) old('department_id', $employee->department_id) === (string) $department->id)
+                                >
+                                    {{ $department->name }}
+                                </option>
+                            @endforeach
+                        </flux:select>
+                        <flux:error name="department_id" />
                     </flux:field>
 
                     <flux:field class="sm:col-span-2">

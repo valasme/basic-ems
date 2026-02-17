@@ -24,7 +24,7 @@ return new class extends Migration
             $table->decimal('pay_amount', 10, 2)->nullable();
             $table->decimal('pay_salary', 10, 2)->nullable();
             $table->string('job_title')->nullable();
-            $table->string('department')->nullable();
+            $table->foreignId('department_id')->nullable()->constrained()->nullOnDelete();
             $table->timestamps();
 
             $table->index(['user_id', 'last_name', 'first_name']);

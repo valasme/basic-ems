@@ -31,10 +31,24 @@
 		@endif
 
 		@if (session('error'))
-			<flux:callout variant="danger" role="alert" aria-live="assertive">
-				<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
-				<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
-			</flux:callout>
+			<div x-data="{ open: true }" x-show="open">
+				<flux:callout variant="danger" role="alert" aria-live="assertive">
+					<div class="flex items-start gap-4">
+						<div class="min-w-0 flex-1">
+							<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
+							<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
+						</div>
+						<flux:button
+							variant="ghost"
+							size="sm"
+							icon="x-mark"
+							class="shrink-0"
+							x-on:click="open = false"
+							aria-label="{{ __('Dismiss notification') }}"
+						/>
+					</div>
+				</flux:callout>
+			</div>
 		@endif
 
 		<form method="GET" action="{{ route('due-payments.index') }}" role="search" aria-describedby="due-payments-search-help" class="flex items-center gap-2">
@@ -127,7 +141,7 @@
 								{{ $employee->job_title ?? '-' }}
 							</flux:table.cell>
 							<flux:table.cell>
-								${{ number_format((float) $employee->pay_amount, 2) }}
+								{{ $employee->pay_amount !== null ? '$' . number_format((float) $employee->pay_amount, 2) : '-' }}
 							</flux:table.cell>
 							<flux:table.cell>
 								<div class="flex flex-col">

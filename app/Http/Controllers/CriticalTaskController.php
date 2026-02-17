@@ -6,7 +6,6 @@ use App\Models\Task;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Throwable;
 
 class CriticalTaskController extends Controller
@@ -31,7 +30,9 @@ class CriticalTaskController extends Controller
         /** @var string|null $search */
         $search = $request->query('search');
         /** @var string|null $rawFilter */
-        $rawFilter = $request->query('filter');
+        $rawFilter = is_string($request->query('filter'))
+            ? $request->query('filter')
+            : null;
 
         $filter = in_array($rawFilter, self::FILTERS, true)
             ? $rawFilter
@@ -41,12 +42,10 @@ class CriticalTaskController extends Controller
             $request->session()->flash('error', 'Invalid filter selected. Showing default ranking.');
         }
 
-        /** @var Collection<int, Task> $tasks */
         $tasks = collect();
 
         try {
-            /** @var Collection<int, Task> $loadedTasks */
-            $loadedTasks = $this->applyFilter(
+            $tasks = $this->applyFilter(
                 Task::query()
                     ->select(['id', 'user_id', 'employee_id', 'title', 'status', 'priority', 'due_date', 'created_at'])
                     ->with(['employee:id,user_id,first_name,last_name'])
@@ -55,8 +54,6 @@ class CriticalTaskController extends Controller
                     ->search($search),
                 $filter
             )->get();
-
-            $tasks = $loadedTasks;
         } catch (Throwable $exception) {
             report($exception);
 

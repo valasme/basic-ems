@@ -34,10 +34,26 @@
 		@endif
 
 		@if (session('error'))
-			<flux:callout variant="danger" role="alert" aria-live="assertive">
-				<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
-				<flux:subheading class="mt-1">{{ session('error') }}</flux:subheading>
-			</flux:callout>
+			<div x-data="{ open: true }" x-show="open">
+				<flux:callout variant="danger" role="alert" aria-live="assertive">
+					<div class="flex items-start gap-4">
+						<div class="min-w-0 flex-1">
+							<flux:heading size="sm">{{ __('Something went wrong') }}</flux:heading>
+							<flux:subheading class="mt-1">
+								{{ session('error') }}
+							</flux:subheading>
+						</div>
+						<flux:button
+							variant="ghost"
+							size="sm"
+							icon="x-mark"
+							class="shrink-0"
+							x-on:click="open = false"
+							aria-label="{{ __('Dismiss notification') }}"
+						/>
+					</div>
+				</flux:callout>
+			</div>
 		@endif
 
 		<form method="GET" action="{{ route('tasks.index') }}" role="search" aria-describedby="tasks-search-help" class="flex flex-col gap-2 sm:flex-row sm:items-center">

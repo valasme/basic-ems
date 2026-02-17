@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
-use App\Models\Employee;
 use App\Models\Task;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\View\View;
@@ -12,7 +11,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator as BaseLengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Throwable;
 
 class TaskController extends Controller
@@ -244,7 +242,6 @@ class TaskController extends Controller
         $this->authorize('create', Task::class);
         $user = $request->user();
 
-        /** @var Collection<int, Employee> $employees */
         $employees = $user
             ->employees()
             ->select(['id', 'user_id', 'first_name', 'last_name'])
@@ -300,7 +297,6 @@ class TaskController extends Controller
         $this->authorize('update', $task);
         $user = $request->user();
 
-        /** @var Collection<int, Employee> $employees */
         $employees = $user
             ->employees()
             ->select(['id', 'user_id', 'first_name', 'last_name'])

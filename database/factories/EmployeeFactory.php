@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -37,7 +38,7 @@ class EmployeeFactory extends Factory
             'pay_day' => fake()->optional()->numberBetween(1, 28),
             'pay_amount' => fake()->randomFloat(2, 1200, 3000),
             'job_title' => fake()->jobTitle(),
-            'department' => fake()->randomElement(['Engineering', 'Marketing', 'Sales', 'Human Resources', 'Finance', 'Operations']),
+            'department_id' => null,
         ];
     }
 
@@ -69,6 +70,16 @@ class EmployeeFactory extends Factory
         return $this->state(fn (array $attributes): array => [
             'first_name' => $firstName,
             'last_name' => $lastName,
+        ]);
+    }
+
+    /**
+     * State for creating an employee in a specific department.
+     */
+    public function forDepartment(Department $department): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'department_id' => $department->id,
         ]);
     }
 }
