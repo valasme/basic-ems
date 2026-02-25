@@ -133,8 +133,13 @@ class Task extends Model
 
                     $escapedFullName = str_replace(['%', '_'], ['\%', '\_'], mb_strtolower($searchTerm));
 
+                    $isSqlite = $employeeQuery->getConnection()->getDriverName() === 'sqlite';
+                    $concat = $isSqlite
+                        ? "first_name || ' ' || last_name"
+                        : "CONCAT(first_name, ' ', last_name)";
+
                     $employeeQuery->orWhereRaw(
-                        "LOWER(CONCAT(first_name, ' ', last_name)) LIKE ?",
+                        "LOWER($concat) LIKE ?",
                         ["%{$escapedFullName}%"]
                     );
                 })
