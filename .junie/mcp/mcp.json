@@ -1,0 +1,20 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "C:\\Users\\valas\\.config\\herd\\bin\\php85\\php.exe",
+            "args": [
+                "C:\\Users\\valas\\Herd\\basic-ems\\artisan",
+                "boost:mcp"
+            ]
+        },
+        "herd": {
+            "command": "C:\\Users\\valas\\.config\\herd\\bin\\php85\\php.exe",
+            "args": [
+                "C:/Users/valas/.config/herd/bin/herd-mcp.phar"
+            ],
+            "env": {
+                "SITE_PATH": "C:\\Users\\valas\\Herd\\basic-ems"
+            }
+        }
+    }
+}

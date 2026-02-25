@@ -1,6 +1,6 @@
 {
     "agents": [
-        "copilot"
+        "junie"
     ],
     "herd_mcp": true,
     "mcp": true,
